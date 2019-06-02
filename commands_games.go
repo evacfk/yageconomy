@@ -175,7 +175,9 @@ var GameCommands = []*commands.YAGCommand{
 
 				return SimpleEmbedResponse(ms, "You sucessfully robbed **%s** for **%d%s**!", target.Username, ApplyGamblingBoost(account, amount), conf.CurrencySymbol), nil
 			} else {
-				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, ms.ID, common.BotUser.ID, int64(conf.RobFine), int64(conf.RobFine))
+				fine := int64(float64(conf.RobFine/100) * float64(account.MoneyWallet))
+
+				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, ms.ID, common.BotUser.ID, fine, fine)
 
 				if err != nil {
 					return nil, err

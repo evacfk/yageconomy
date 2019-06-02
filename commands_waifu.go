@@ -474,7 +474,8 @@ var (
 
 			err = common.SqlTX(func(tx *sql.Tx) error {
 				// deduct money from our account
-				_, err := tx.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, ms.ID, itemToBuy.Price)
+				err = TransferMoneyWallet(parsed.Context(), tx, conf, false, ms.ID, common.BotUser.ID, int64(itemToBuy.Price), int64(itemToBuy.Price))
+				// _, err := tx.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, ms.ID, itemToBuy.Price)
 				if err != nil {
 					return err
 				}

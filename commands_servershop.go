@@ -146,8 +146,9 @@ RETURNING value;`
 					}
 				}
 
-				_, err = tx.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3, gambling_boost_percentage = gambling_boost_percentage + $4 WHERE guild_id = $1 AND user_id = $2",
-					parsed.GS.ID, ms.ID, shopItem.Cost, shopItem.GamblingBoostPercentage)
+				err = TransferMoneyWallet(parsed.Context(), tx, conf, false, ms.ID, common.BotUser.ID, shopItem.Cost, shopItem.Cost)
+				// _, err = tx.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3, gambling_boost_percentage = gambling_boost_percentage + $4 WHERE guild_id = $1 AND user_id = $2",
+				// parsed.GS.ID, ms.ID, shopItem.Cost, shopItem.GamblingBoostPercentage)
 
 				if err != nil {
 					return err
