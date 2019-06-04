@@ -36,11 +36,11 @@ var (
 			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GS.ID, parsed.CS.ID, parsed.Args[0].Int(), 0,
 				func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 
-					offset := (newPage - 1) * 20
+					offset := (newPage - 1) * 10
 					items, err := models.EconomyUsers(
 						models.EconomyUserWhere.GuildID.EQ(parsed.GS.ID),
 						qm.OrderBy("waifu_item_worth desc"),
-						qm.Limit(20),
+						qm.Limit(10),
 						qm.Offset(offset),
 					).AllG(context.Background())
 
@@ -54,16 +54,17 @@ var (
 					}
 					users := bot.GetUsersGS(parsed.GS, ids...)
 
-					var buf strings.Builder
-					buf.WriteString("```\n")
-					for i, v := range items {
-						rank := i + offset + 1
-						buf.WriteString(fmt.Sprintf("#%2d - %-20s: %s%d\n", rank, users[i].Username, conf.CurrencySymbol, WaifuWorth(v)))
-					}
-					buf.WriteString("```")
+					embed := SimpleEmbedResponse(ms, "")
+					embed.Title = "Waifu Leaderboard"
 
-					embed := SimpleEmbedResponse(ms, buf.String())
-					embed.Title = "Top waifus on this server!"
+					for i, v := range items {
+						user := users[i]
+						embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+							Name:  fmt.Sprintf("#%d %s", i+offset+1, user.Username),
+							Value: fmt.Sprintf("%s%d", conf.CurrencySymbol, WaifuWorth(v)),
+						})
+
+					}
 
 					return embed, nil
 				})
