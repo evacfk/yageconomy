@@ -17,6 +17,7 @@ var GameCommands = []*commands.YAGCommand{
 	&commands.YAGCommand{
 		CmdCategory:  CategoryEconomy,
 		Name:         "BetFlip",
+		Aliases:      []string{"bf"},
 		Description:  "Bet on heads or tail, if you guess correct you win 2x your bet",
 		RequiredArgs: 2,
 		Arguments: []*dcmd.ArgDef{
@@ -65,9 +66,9 @@ var GameCommands = []*commands.YAGCommand{
 
 			msg := ""
 			if won {
-				msg = fmt.Sprintf("Result is... **%s**: You won! Awarded with **%d%s**", strResult, int64(amount)+winningsLosses, conf.CurrencySymbol)
+				msg = fmt.Sprintf("Result is... **%s**: You won! Awarded with **%s%d**", strResult, conf.CurrencySymbol, int64(amount)+winningsLosses)
 			} else {
-				msg = fmt.Sprintf("Result is... **%s**: You lost... you're now **%d%s** poorer...", strResult, moneyIn, conf.CurrencySymbol)
+				msg = fmt.Sprintf("Result is... **%s**: You lost... you're now **%s%d** poorer...", strResult, conf.CurrencySymbol, moneyIn)
 			}
 
 			return SimpleEmbedResponse(ms, msg), nil
@@ -76,6 +77,7 @@ var GameCommands = []*commands.YAGCommand{
 	&commands.YAGCommand{
 		CmdCategory:  CategoryEconomy,
 		Name:         "BetRoll",
+		Aliases:      []string{"br"},
 		Description:  "Rolls 1-100, Rolling over 66 yields x2 of your bet, over 90 -> x4 and 100 -> x10.",
 		RequiredArgs: 1,
 		Arguments: []*dcmd.ArgDef{
@@ -123,9 +125,9 @@ var GameCommands = []*commands.YAGCommand{
 
 			msg := ""
 			if won {
-				msg = fmt.Sprintf("Rolled **%d** and won! You have been awarded with **%d%s**", roll, walletMod+amount, conf.CurrencySymbol)
+				msg = fmt.Sprintf("Rolled **%d** and won! You have been awarded with **%s%d**", roll, conf.CurrencySymbol, walletMod+amount)
 			} else {
-				msg = fmt.Sprintf("Rolled **%d** and lost... you're now **%d%s** poorer...", roll, amount, conf.CurrencySymbol)
+				msg = fmt.Sprintf("Rolled **%d** and lost... you're now **%s%d** poorer...", roll, conf.CurrencySymbol, amount)
 			}
 
 			return SimpleEmbedResponse(ms, msg), nil
@@ -173,7 +175,7 @@ var GameCommands = []*commands.YAGCommand{
 					return nil, err
 				}
 
-				return SimpleEmbedResponse(ms, "You sucessfully robbed **%s** for **%d%s**!", target.Username, ApplyGamblingBoost(account, amount), conf.CurrencySymbol), nil
+				return SimpleEmbedResponse(ms, "You sucessfully robbed **%s** for **%s%d**!", target.Username, conf.CurrencySymbol, ApplyGamblingBoost(account, amount)), nil
 			} else {
 				fine := int64(float64(conf.RobFine/100) * float64(account.MoneyWallet))
 
@@ -183,8 +185,8 @@ var GameCommands = []*commands.YAGCommand{
 					return nil, err
 				}
 
-				return ErrorEmbed(ms, "You failed robbing **%s**, you were fined **%d%s** as a result, hopefully you have learned your lesson now.",
-					target.Username, conf.RobFine, conf.CurrencySymbol), nil
+				return ErrorEmbed(ms, "You failed robbing **%s**, you were fined **%s%d** as a result, hopefully you have learned your lesson now.",
+					target.Username, conf.CurrencySymbol, fine), nil
 			}
 
 		},
@@ -232,7 +234,7 @@ var GameCommands = []*commands.YAGCommand{
 				return SimpleEmbedResponse(ms, "Aww man, you let your fish slip away..."), nil
 			}
 
-			return SimpleEmbedResponse(ms, "Nice! You caught your fish worth **%d%s**!", wonAmount, conf.CurrencySymbol), nil
+			return SimpleEmbedResponse(ms, "Nice! You caught a fish worth **%s%d**!", conf.CurrencySymbol, wonAmount), nil
 
 		},
 	},

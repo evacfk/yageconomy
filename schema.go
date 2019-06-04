@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS economy_configs (
 	auto_plant_channels BIGINT[],
 	auto_plant_min BIGINT NOT NULL,
 	auto_plant_max BIGINT NOT NULL,
+	auto_plant_chance NUMERIC(5,4) NOT NULL,
 
 	start_balance BIGINT NOT NULL,
 
@@ -116,9 +117,11 @@ CREATE TABLE IF NOT EXISTS economy_shop_list_items (
 );
 
 CREATE TABLE IF NOT EXISTS economy_plants (
-	channel_id BIGINT PRIMARY KEY,
+	message_id BIGINT PRIMARY KEY,
+	channel_id BIGINT NOT NULL,
 	guild_id BIGINT NOT NULL,
-	message_id BIGINT NOT NULL,
+
+	created_at TIMESTAMP WITH TIME ZONE NOT NULL,
 
 	author_id BIGINT NOT NULL,
 	amount BIGINT NOT NULL,

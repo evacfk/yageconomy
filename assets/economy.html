@@ -61,6 +61,10 @@
                                 <label>Auto plant max money</label>
                                 <input type="number" name="AutoPlantMax" class="form-control" value="{{.PluginSettings.AutoPlantMax}}">
                             </div>
+                            <div class="form-group">
+                                <label>Auto chance per message</label>
+                                <input type="number" name="AutoPlantChance" class="form-control" value="{{call .fmtDecimalPercentage .PluginSettings.AutoPlantChance.Big}}" step="0.01" min="0" max="100">
+                            </div>
                         </div>
                         <div class="col">
                             <div class="form-group">

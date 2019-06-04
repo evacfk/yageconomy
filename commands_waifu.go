@@ -58,7 +58,7 @@ var (
 					buf.WriteString("```\n")
 					for i, v := range items {
 						rank := i + offset + 1
-						buf.WriteString(fmt.Sprintf("#%2d - %-20s: %d%s\n", rank, users[i].Username, WaifuWorth(v), conf.CurrencySymbol))
+						buf.WriteString(fmt.Sprintf("#%2d - %-20s: %s%d\n", rank, users[i].Username, conf.CurrencySymbol, WaifuWorth(v)))
 					}
 					buf.WriteString("```")
 
@@ -139,7 +139,7 @@ var (
 			embed.Fields = []*discordgo.MessageEmbedField{
 				&discordgo.MessageEmbedField{
 					Name:  "Waifu Worth",
-					Value: strconv.FormatInt(WaifuWorth(account), 10) + conf.CurrencySymbol,
+					Value: conf.CurrencySymbol + strconv.FormatInt(WaifuWorth(account), 10),
 				},
 				&discordgo.MessageEmbedField{
 					Name:  "Affinity towards",
@@ -189,7 +189,7 @@ var (
 			if parsed.Args[1].Int() > 0 {
 				claimAmount = int64(parsed.Args[1].Int())
 				if claimAmount < cost {
-					return ErrorEmbed(ms, "That waifu costs more than that to claim (%d%s)", cost, conf.CurrencySymbol), nil
+					return ErrorEmbed(ms, "That waifu costs more than that to claim (%s%d%s)", conf.CurrencySymbol, cost), nil
 				}
 
 			}
@@ -226,7 +226,7 @@ var (
 				return ErrorEmbed(ms, forcedErrorResp), nil
 			}
 
-			return SimpleEmbedResponse(ms, "Claimed **%s** as your waifu using **%d%s**!", target.Username, claimAmount, conf.CurrencySymbol), nil
+			return SimpleEmbedResponse(ms, "Claimed **%s** as your waifu using **%s%d**!", target.Username, conf.CurrencySymbol, claimAmount), nil
 		},
 	}
 	WaifuCmdReset = &commands.YAGCommand{
@@ -289,7 +289,7 @@ var (
 			worth := WaifuWorth(waifuAccount)
 			transferFee := int64(float64(worth) * 0.1)
 			if account.MoneyWallet < transferFee {
-				return ErrorEmbed(ms, "Not enough money in your wallet to transfer this waifu (costs %d%s)", transferFee, conf.CurrencySymbol), nil
+				return ErrorEmbed(ms, "Not enough money in your wallet to transfer this waifu (costs %s%d)", conf.CurrencySymbol, transferFee), nil
 			}
 
 			err = common.SqlTX(func(tx *sql.Tx) error {
@@ -323,7 +323,7 @@ var (
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(ms, "Transferred **%s** to **%s** for **%d%s**", waifu.Username, newOwner.Username, transferFee, conf.CurrencySymbol), nil
+			return SimpleEmbedResponse(ms, "Transferred **%s** to **%s** for **%s%d**", waifu.Username, newOwner.Username, conf.CurrencySymbol, transferFee), nil
 		},
 	}
 	WaifuCmdDivorce = &commands.YAGCommand{
@@ -383,7 +383,7 @@ var (
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(ms, "You're now divorced with **%s**, you got back **%d%s**", waifu.Username, moneyBack, conf.CurrencySymbol), nil
+			return SimpleEmbedResponse(ms, "You're now divorced with **%s**, you got back **%s%d**", waifu.Username, conf.CurrencySymbol, moneyBack), nil
 		},
 	}
 	WaifuCmdAffinity = &commands.YAGCommand{
@@ -491,7 +491,7 @@ var (
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(ms, "Gifted **%s** to **%s** for **%d%s**!", itemToBuy.Name, target.Username, itemToBuy.Price, conf.CurrencySymbol), nil
+			return SimpleEmbedResponse(ms, "Gifted **%s** to **%s** for **%s%d**!", itemToBuy.Name, target.Username, conf.CurrencySymbol, itemToBuy.Price), nil
 		},
 	}
 
@@ -529,8 +529,8 @@ var (
 			}
 
 			conf := CtxConfig(parsed.Context())
-			return SimpleEmbedResponse(commands.ContextMS(parsed.Context()), "Added **%s** to the shop at the price of **%d%s**, it received the ID **%d**",
-				m.Name, m.Price, conf.CurrencySymbol, m.LocalID), nil
+			return SimpleEmbedResponse(commands.ContextMS(parsed.Context()), "Added **%s** to the shop at the price of **%s%d**, it received the ID **%d**",
+				m.Name, conf.CurrencySymbol, m.Price, m.LocalID), nil
 		},
 	}
 	WaifuShopEdit = &commands.YAGCommand{
@@ -640,7 +640,7 @@ func ListWaifuItems(guildID, channelID int64, ms *dstate.MemberState, currentMon
 			}
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   fmt.Sprintf("#%d - %s %s", v.LocalID, v.Icon, v.Name),
-				Value:  fmt.Sprintf("%d%s%s", v.Price, currencySymbol, extraVal),
+				Value:  fmt.Sprintf("%s%d%s", currencySymbol, v.Price, extraVal),
 				Inline: true,
 			})
 		}

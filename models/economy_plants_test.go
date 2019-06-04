@@ -149,7 +149,7 @@ func testEconomyPlantsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := EconomyPlantExists(ctx, tx, o.ChannelID)
+	e, err := EconomyPlantExists(ctx, tx, o.MessageID)
 	if err != nil {
 		t.Errorf("Unable to check if EconomyPlant exists: %s", err)
 	}
@@ -175,7 +175,7 @@ func testEconomyPlantsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	economyPlantFound, err := FindEconomyPlant(ctx, tx, o.ChannelID)
+	economyPlantFound, err := FindEconomyPlant(ctx, tx, o.MessageID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -427,7 +427,7 @@ func testEconomyPlantsSelect(t *testing.T) {
 }
 
 var (
-	economyPlantDBTypes = map[string]string{`ChannelID`: `bigint`, `GuildID`: `bigint`, `MessageID`: `bigint`, `AuthorID`: `bigint`, `Amount`: `bigint`, `Password`: `text`}
+	economyPlantDBTypes = map[string]string{`MessageID`: `bigint`, `ChannelID`: `bigint`, `GuildID`: `bigint`, `CreatedAt`: `timestamp with time zone`, `AuthorID`: `bigint`, `Amount`: `bigint`, `Password`: `text`}
 	_                   = bytes.MinRead
 )
 

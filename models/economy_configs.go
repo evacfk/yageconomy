@@ -38,6 +38,7 @@ type EconomyConfig struct {
 	AutoPlantChannels   types.Int64Array `boil:"auto_plant_channels" json:"auto_plant_channels,omitempty" toml:"auto_plant_channels" yaml:"auto_plant_channels,omitempty"`
 	AutoPlantMin        int64            `boil:"auto_plant_min" json:"auto_plant_min" toml:"auto_plant_min" yaml:"auto_plant_min"`
 	AutoPlantMax        int64            `boil:"auto_plant_max" json:"auto_plant_max" toml:"auto_plant_max" yaml:"auto_plant_max"`
+	AutoPlantChance     types.Decimal    `boil:"auto_plant_chance" json:"auto_plant_chance" toml:"auto_plant_chance" yaml:"auto_plant_chance"`
 	StartBalance        int64            `boil:"start_balance" json:"start_balance" toml:"start_balance" yaml:"start_balance"`
 	FishingMaxWinAmount int64            `boil:"fishing_max_win_amount" json:"fishing_max_win_amount" toml:"fishing_max_win_amount" yaml:"fishing_max_win_amount"`
 	FishingMinWinAmount int64            `boil:"fishing_min_win_amount" json:"fishing_min_win_amount" toml:"fishing_min_win_amount" yaml:"fishing_min_win_amount"`
@@ -63,6 +64,7 @@ var EconomyConfigColumns = struct {
 	AutoPlantChannels   string
 	AutoPlantMin        string
 	AutoPlantMax        string
+	AutoPlantChance     string
 	StartBalance        string
 	FishingMaxWinAmount string
 	FishingMinWinAmount string
@@ -83,6 +85,7 @@ var EconomyConfigColumns = struct {
 	AutoPlantChannels:   "auto_plant_channels",
 	AutoPlantMin:        "auto_plant_min",
 	AutoPlantMax:        "auto_plant_max",
+	AutoPlantChance:     "auto_plant_chance",
 	StartBalance:        "start_balance",
 	FishingMaxWinAmount: "fishing_max_win_amount",
 	FishingMinWinAmount: "fishing_min_win_amount",
@@ -142,6 +145,27 @@ func (w whereHelperstring) LTE(x string) qm.QueryMod { return qmhelper.Where(w.f
 func (w whereHelperstring) GT(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
 func (w whereHelperstring) GTE(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
+type whereHelpertypes_Decimal struct{ field string }
+
+func (w whereHelpertypes_Decimal) EQ(x types.Decimal) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.EQ, x)
+}
+func (w whereHelpertypes_Decimal) NEQ(x types.Decimal) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.NEQ, x)
+}
+func (w whereHelpertypes_Decimal) LT(x types.Decimal) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpertypes_Decimal) LTE(x types.Decimal) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpertypes_Decimal) GT(x types.Decimal) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpertypes_Decimal) GTE(x types.Decimal) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 type whereHelperint struct{ field string }
 
 func (w whereHelperint) EQ(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
@@ -166,6 +190,7 @@ var EconomyConfigWhere = struct {
 	AutoPlantChannels   whereHelpertypes_Int64Array
 	AutoPlantMin        whereHelperint64
 	AutoPlantMax        whereHelperint64
+	AutoPlantChance     whereHelpertypes_Decimal
 	StartBalance        whereHelperint64
 	FishingMaxWinAmount whereHelperint64
 	FishingMinWinAmount whereHelperint64
@@ -186,6 +211,7 @@ var EconomyConfigWhere = struct {
 	AutoPlantChannels:   whereHelpertypes_Int64Array{field: `auto_plant_channels`},
 	AutoPlantMin:        whereHelperint64{field: `auto_plant_min`},
 	AutoPlantMax:        whereHelperint64{field: `auto_plant_max`},
+	AutoPlantChance:     whereHelpertypes_Decimal{field: `auto_plant_chance`},
 	StartBalance:        whereHelperint64{field: `start_balance`},
 	FishingMaxWinAmount: whereHelperint64{field: `fishing_max_win_amount`},
 	FishingMinWinAmount: whereHelperint64{field: `fishing_min_win_amount`},
@@ -210,8 +236,8 @@ func (*economyConfigR) NewStruct() *economyConfigR {
 type economyConfigL struct{}
 
 var (
-	economyConfigColumns               = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine"}
-	economyConfigColumnsWithoutDefault = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine"}
+	economyConfigColumns               = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine"}
+	economyConfigColumnsWithoutDefault = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine"}
 	economyConfigColumnsWithDefault    = []string{}
 	economyConfigPrimaryKeyColumns     = []string{"guild_id"}
 )

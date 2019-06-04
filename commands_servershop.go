@@ -75,7 +75,7 @@ var ShopCommands = []*commands.YAGCommand{
 
 					embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 						Name:   fmt.Sprintf("#%d - %s", v.LocalID, name),
-						Value:  fmt.Sprintf("%s - %d%s%s", typStr, v.Cost, conf.CurrencySymbol, canAffordStr),
+						Value:  fmt.Sprintf("%s - %s%d%s", typStr, conf.CurrencySymbol, v.Cost, canAffordStr),
 						Inline: true,
 					})
 				}
@@ -172,7 +172,7 @@ RETURNING value;`
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(ms, "You purchased **%s** for **%d%s**!", shopItem.Name, shopItem.Cost, conf.CurrencySymbol), nil
+			return SimpleEmbedResponse(ms, "You purchased **%s** for **%s%d**!", shopItem.Name, conf.CurrencySymbol, shopItem.Cost), nil
 		},
 	},
 }

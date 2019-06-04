@@ -21,6 +21,7 @@ import (
 	"image"
 	"image/color"
 	"math/rand"
+	"strings"
 )
 
 var _ bot.BotInitHandler = (*Plugin)(nil)
@@ -231,22 +232,19 @@ func handleMessageCreate(evt *eventsystem.EventData) {
 
 	// maybe plant?
 	if common.ContainsInt64Slice(conf.AutoPlantChannels, msg.ChannelID) {
-		if rand.Float64() < 0.98 {
+
+		chance, _ := conf.AutoPlantChance.Float64()
+		if rand.Float64() > chance {
 			return
 		}
 
 		amount := rand.Int63n(conf.AutoPlantMax-conf.AutoPlantMin) + conf.AutoPlantMin
 
-		availableChars := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
-
-		pw := ""
-		for i := 0; i < 6; i++ {
-			char := availableChars[rand.Intn(len(availableChars))]
-			pw += char
-		}
+		prefix, _ := commands.GetCommandPrefix(conf.GuildID)
+		msgContent := fmt.Sprintf("**%d** random **%s** appeared! Pick them up with `%spick <password>`", amount, conf.CurrencySymbol, prefix)
 
 		// Plant!
-		err = PlantMoney(context.Background(), conf, msg.ChannelID, 0, int(amount), pw)
+		err = PlantMoney(context.Background(), conf, msg.ChannelID, 0, int(amount), "", msgContent)
 		if err != nil {
 			logger.WithError(err).WithField("guild", msg.GuildID).WithField("channel", msg.ChannelID).Error("failed planting money")
 		}
@@ -255,14 +253,9 @@ func handleMessageCreate(evt *eventsystem.EventData) {
 
 var errAlreadyPlantInChannel = errors.New("Already money planted in this channel")
 
-func PlantMoney(ctx context.Context, conf *models.EconomyConfig, channelID, author int64, amount int, password string) error {
-	_, err := models.FindEconomyPlantG(ctx, channelID)
-	if err == nil {
-		return errAlreadyPlantInChannel
-	}
-
-	if errors.Cause(err) != sql.ErrNoRows {
-		return err
+func PlantMoney(ctx context.Context, conf *models.EconomyConfig, channelID, author int64, amount int, password, prompt string) error {
+	if password == "" {
+		password = genPlantPassword()
 	}
 
 	r, err := models.FindEconomyPickImageG(ctx, conf.GuildID)
@@ -275,62 +268,76 @@ func PlantMoney(ctx context.Context, conf *models.EconomyConfig, channelID, auth
 		GuildID:   conf.GuildID,
 		AuthorID:  author,
 		Amount:    int64(amount),
-		Password:  password,
+		Password:  strings.ToLower(password),
 	}
 
-	err = m.InsertG(ctx, boil.Infer())
-	if err != nil {
-		return err
-	}
-
-	img, _, err := image.Decode(bytes.NewReader(r.Image))
-	if err != nil {
-		return err
-	}
-
-	var msg *discordgo.Message
+	// create the drawing context
+	var c *gg.Context
 	if r != nil {
-		c := gg.NewContextForImage(img)
-		c.SetFontFace(truetype.NewFace(gofont, &truetype.Options{
-			Size: 36,
-		}))
-
-		c.SetColor(color.RGBA{
-			1, 1, 1, 156,
-		})
-		width, height := c.MeasureString(password)
-		c.DrawRectangle(0, 0, width+20, height+20)
-		c.Fill()
-
-		c.SetColor(color.RGBA{
-			255, 255, 255, 255,
-		})
-
-		c.DrawString(password, 5, height+5)
-
-		buf := bytes.NewBuffer(nil)
-		err = c.EncodePNG(buf)
+		img, _, err := image.Decode(bytes.NewReader(r.Image))
 		if err != nil {
 			return err
 		}
 
-		msgContent := fmt.Sprintf("%d random %s appeared! Pick them up with `pick <password>`", amount, conf.CurrencySymbol)
-		msg, err = common.BotSession.ChannelFileSendWithMessage(channelID, msgContent, "plant.png", buf)
+		c = gg.NewContextForImage(img)
 	} else {
-		// fallback if no image is set
-		embed := &discordgo.MessageEmbed{
-			Description: fmt.Sprintf("%d random %s appeared! Pick them up with `pick %s`", amount, conf.CurrencySymbol, password),
-			Color:       ColorBlue,
-		}
-		msg, err = common.BotSession.ChannelMessageSendEmbed(channelID, embed)
+		// just use a white placeholder image
+		c = gg.NewContext(350, 150)
+		c.SetColor(color.RGBA{
+			255, 255, 255, 255,
+		})
+		c.DrawRectangle(0, 0, 350, 150)
+		c.Fill()
 	}
 
+	c.SetColor(color.RGBA{
+		1, 1, 1, 156,
+	})
+
+	tSize := float64(36)
+	textWidth := float64(0)
+	textHeight := float64(0)
+
+	for {
+		// find the best size
+		c.SetFontFace(truetype.NewFace(gofont, &truetype.Options{
+			Size: tSize,
+		}))
+
+		textWidth, textHeight = c.MeasureString(password)
+		if int(textWidth) > c.Width() || int(textHeight) > c.Height() {
+			tSize /= 2
+		} else {
+			break
+		}
+
+		if tSize <= 2 {
+			break
+		}
+	}
+
+	c.DrawRectangle(0, 0, textWidth+20, textHeight+20)
+	c.Fill()
+
+	c.SetColor(color.RGBA{
+		255, 255, 255, 255,
+	})
+
+	c.DrawString(password, 5, textHeight+5)
+
+	buf := bytes.NewBuffer(nil)
+	err = c.EncodePNG(buf)
+	if err != nil {
+		return err
+	}
+
+	msg, err := common.BotSession.ChannelFileSendWithMessage(channelID, prompt, "plant.png", buf)
 	if err != nil {
 		return err
 	}
 
 	m.MessageID = msg.ID
-	_, err = m.UpdateG(ctx, boil.Whitelist("message_id"))
+	err = m.InsertG(ctx, boil.Infer())
 
 	return err
 }
@@ -407,4 +414,17 @@ func TransferMoneyWallet(ctx context.Context, tx *sql.Tx, conf *models.EconomyCo
 	}
 
 	return err
+}
+
+func genPlantPassword() string {
+
+	availableChars := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
+
+	pw := ""
+	for i := 0; i < 4; i++ {
+		char := availableChars[rand.Intn(len(availableChars))]
+		pw += char
+	}
+
+	return pw
 }

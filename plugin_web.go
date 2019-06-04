@@ -3,11 +3,13 @@ package yageconomy
 import (
 	"bytes"
 	"database/sql"
+	"github.com/ericlagergren/decimal"
 	"github.com/jonas747/yageconomy/models"
 	"github.com/jonas747/yagpdb/common"
 	"github.com/jonas747/yagpdb/web"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/types"
 	"goji.io"
 	"goji.io/pat"
 	"image"
@@ -30,6 +32,7 @@ type PostConfigForm struct {
 	AutoPlantChannels   []int64 `valid:"channel,true"`
 	AutoPlantMin        int64
 	AutoPlantMax        int64
+	AutoPlantChance     float64
 	RobFine             int
 	FishingCooldown     int
 	FishingMaxwinAmount int64
@@ -52,6 +55,7 @@ func (p PostConfigForm) DBModel() *models.EconomyConfig {
 		AutoPlantChannels:   p.AutoPlantChannels,
 		AutoPlantMin:        p.AutoPlantMin,
 		AutoPlantMax:        p.AutoPlantMax,
+		AutoPlantChance:     types.NewDecimal(decimal.New(int64(p.AutoPlantChance*100), 4)),
 		RobFine:             p.RobFine,
 		FishingCooldown:     p.FishingCooldown,
 		FishingMaxWinAmount: p.FishingMaxwinAmount,
@@ -84,8 +88,15 @@ func (p *Plugin) InitWeb() {
 
 }
 
+func tmplFormatPercentage(in *decimal.Big) string {
+	result := in.Mul(in, decimal.New(100, 0))
+	return result.String()
+}
+
 func handleGetEconomy(w http.ResponseWriter, r *http.Request) (web.TemplateData, error) {
 	g, templateData := web.GetBaseCPContextData(r.Context())
+
+	templateData["fmtDecimalPercentage"] = tmplFormatPercentage
 
 	if templateData["PluginSettings"] == nil {
 		conf, err := models.FindEconomyConfigG(r.Context(), g.ID)
@@ -143,8 +154,8 @@ func HandleSetImage(w http.ResponseWriter, r *http.Request) (web.TemplateData, e
 		return tmpl, err
 	}
 
-	if header.Size > 100000 {
-		return tmpl.AddAlerts(web.ErrorAlert("Max image size is 100KB")), nil
+	if header.Size > 250000 {
+		return tmpl.AddAlerts(web.ErrorAlert("Max image size is 250KB")), nil
 	}
 
 	buf := make([]byte, int(header.Size))

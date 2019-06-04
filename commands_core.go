@@ -56,12 +56,12 @@ var CoreCommands = []*commands.YAGCommand{
 					&discordgo.MessageEmbedField{
 						Inline: true,
 						Name:   "Bank Balance",
-						Value:  fmt.Sprint(targetAccount.MoneyBank) + conf.CurrencySymbol,
+						Value:  conf.CurrencySymbol + fmt.Sprint(targetAccount.MoneyBank),
 					},
 					&discordgo.MessageEmbedField{
 						Inline: true,
 						Name:   "Wallet",
-						Value:  fmt.Sprint(targetAccount.MoneyWallet) + conf.CurrencySymbol,
+						Value:  conf.CurrencySymbol + fmt.Sprint(targetAccount.MoneyWallet),
 					},
 					&discordgo.MessageEmbedField{
 						Inline: true,
@@ -70,7 +70,7 @@ var CoreCommands = []*commands.YAGCommand{
 					},
 					&discordgo.MessageEmbedField{
 						Inline: true,
-						Name:   "Fish Caugth",
+						Name:   "Fish caught",
 						Value:  fmt.Sprintf("%d", targetAccount.FishCaugth),
 					},
 				},
@@ -107,7 +107,7 @@ var CoreCommands = []*commands.YAGCommand{
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(ms, "Withdrew **%d%s** from your bank, your wallet now has **%d%s**", amount, conf.CurrencySymbol, account.MoneyWallet, conf.CurrencySymbol), nil
+			return SimpleEmbedResponse(ms, "Withdrew **%s%d** from your bank, your wallet now has **%s%d**", conf.CurrencySymbol, amount, conf.CurrencySymbol, account.MoneyWallet), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -139,7 +139,7 @@ var CoreCommands = []*commands.YAGCommand{
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(ms, "Deposited **%d%s** Into your bank account, your bank now contains **%d%s**", amount, conf.CurrencySymbol, account.MoneyBank, conf.CurrencySymbol), nil
+			return SimpleEmbedResponse(ms, "Deposited **%s%d** Into your bank account, your bank now contains **%s%d**", conf.CurrencySymbol, amount, conf.CurrencySymbol, account.MoneyBank), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -201,7 +201,7 @@ var CoreCommands = []*commands.YAGCommand{
 				extraStr = " with the message: **" + parsed.Args[2].Str() + "**"
 			}
 
-			return SimpleEmbedResponse(ms, "Sent **%d%s** to **%s**%s", amount, conf.CurrencySymbol, target.Username, extraStr), nil
+			return SimpleEmbedResponse(ms, "Sent **%s%d** to **%s**%s", conf.CurrencySymbol, amount, target.Username, extraStr), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -245,7 +245,7 @@ var CoreCommands = []*commands.YAGCommand{
 				extraStr = " with the message: **" + parsed.Args[2].Str() + "**"
 			}
 
-			return SimpleEmbedResponse(ms, "Awarded **%s** with %d%s%s", target.Username, amount, conf.CurrencySymbol, extraStr), nil
+			return SimpleEmbedResponse(ms, "Awarded **%s** with %s%d%s", target.Username, conf.CurrencySymbol, amount, extraStr), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -289,7 +289,7 @@ var CoreCommands = []*commands.YAGCommand{
 				extraStr = " with the message: **" + parsed.Args[2].Str() + "**"
 			}
 
-			return SimpleEmbedResponse(ms, "Took away %d%s from **%s**%s", amount, conf.CurrencySymbol, target.Username, extraStr), nil
+			return SimpleEmbedResponse(ms, "Took away %s%d from **%s**%s", conf.CurrencySymbol, amount, target.Username, extraStr), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -327,17 +327,7 @@ var CoreCommands = []*commands.YAGCommand{
 			account.MoneyWallet -= int64(amount)
 
 			// update the acconts
-			err = common.SqlTX(func(tx *sql.Tx) error {
-
-				_, err := tx.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE user_id = $2 AND guild_id = $1", parsed.GS.ID, target.ID, amount)
-				if err != nil {
-					return err
-				}
-
-				_, err = tx.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE user_id = $2 AND guild_id = $1", parsed.GS.ID, ms.ID, amount)
-				return err
-			})
-
+			err = TransferMoneyWallet(parsed.Context(), nil, conf, false, ms.ID, target.ID, int64(amount), int64(amount))
 			if err != nil {
 				return nil, err
 			}
@@ -347,7 +337,7 @@ var CoreCommands = []*commands.YAGCommand{
 				extraStr = " with the message: **" + parsed.Args[2].Str() + "**"
 			}
 
-			return SimpleEmbedResponse(ms, "Sent %d%s to %s%s", amount, conf.CurrencySymbol, target.Username, extraStr), nil
+			return SimpleEmbedResponse(ms, "Sent %s%d to %s%s", conf.CurrencySymbol, amount, target.Username, extraStr), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -374,7 +364,7 @@ var CoreCommands = []*commands.YAGCommand{
 			}
 
 			if rows > 0 {
-				return SimpleEmbedResponse(ms, "Claimed your daily of **%d%s**", conf.DailyAmount, conf.CurrencySymbol), nil
+				return SimpleEmbedResponse(ms, "Claimed your daily of **%s%d**", conf.CurrencySymbol, conf.DailyAmount), nil
 			}
 
 			timeToWait := account.LastDailyClaim.Add(time.Duration(conf.DailyFrequency) * time.Minute).Sub(time.Now())
@@ -384,6 +374,7 @@ var CoreCommands = []*commands.YAGCommand{
 	&commands.YAGCommand{
 		CmdCategory: CategoryEconomy,
 		Name:        "TopMoney",
+		Aliases:     []string{"LB"},
 		Description: "Economy leaderboard, optionally specify a page",
 		Arguments: []*dcmd.ArgDef{
 			&dcmd.ArgDef{Name: "Page", Type: dcmd.Int, Default: 1},
@@ -425,7 +416,7 @@ var CoreCommands = []*commands.YAGCommand{
 
 				for i, v := range result {
 					user := users[i]
-					buf.WriteString(fmt.Sprintf("#%2d: %-20s : %d%s\n", i+offset+1, user.Username, v.MoneyBank+v.MoneyWallet, conf.CurrencySymbol))
+					buf.WriteString(fmt.Sprintf("#%2d: %-20s : %s%d\n", i+offset+1, user.Username, conf.CurrencySymbol, v.MoneyBank+v.MoneyWallet))
 				}
 
 				buf.WriteString("```")
@@ -465,83 +456,68 @@ var CoreCommands = []*commands.YAGCommand{
 				return ErrorEmbed(ms, "There's already money planted in this channel"), nil
 			}
 
-			err = PlantMoney(parsed.Context(), conf, parsed.CS.ID, ms.ID, amount, parsed.Args[1].Str())
+			cmdPrefix, _ := commands.GetCommandPrefix(conf.GuildID)
+			msgContent := fmt.Sprintf("%s planted **%s%d** in the channel!\nUse `%spick (code-here)` to pick it up", ms.Username, conf.CurrencySymbol, amount, cmdPrefix)
+
+			err = PlantMoney(parsed.Context(), conf, parsed.CS.ID, ms.ID, amount, parsed.Args[1].Str(), msgContent)
 			if err != nil {
 				return nil, err
 			}
 
-			_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, ms.ID, amount)
+			err = TransferMoneyWallet(parsed.Context(), nil, conf, false, ms.ID, common.BotUser.ID, int64(amount), int64(amount))
 			if err != nil {
 				return nil, err
 			}
 
-			if errors.Cause(err) != sql.ErrNoRows {
-				return nil, err
-			}
+			bot.MessageDeleteQueue.DeleteMessages(parsed.CS.ID, parsed.Msg.ID)
 
-			m := &models.EconomyPlant{
-				ChannelID: parsed.CS.ID,
-				GuildID:   parsed.GS.ID,
-				AuthorID:  ms.ID,
-				Amount:    int64(amount),
-				Password:  parsed.Args[1].Str(),
-			}
-
-			err = m.InsertG(parsed.Context(), boil.Infer())
-			if err != nil {
-				return nil, err
-			}
-
-			extraStr := ""
-			if parsed.Args[1].Str() != "" {
-				extraStr = " with the passowrd `" + parsed.Args[1].Str() + "`"
-			}
-
-			return SimpleEmbedResponse(commands.ContextMS(parsed.Context()),
-				fmt.Sprintf("%s planted **%d%s**%s in the channel!\nUse `pick [password]` to pick it up", ms.Username, amount, conf.CurrencySymbol, extraStr)), nil
+			return nil, nil
 		},
 	},
 	&commands.YAGCommand{
 		CmdCategory:  CategoryEconomy,
 		Name:         "Pick",
 		Description:  "Picks up money planted in the channel previously using plant",
-		RequiredArgs: 0,
+		RequiredArgs: 1,
 		Arguments: []*dcmd.ArgDef{
-			&dcmd.ArgDef{Name: "Password", Type: dcmd.String, Default: ""},
+			&dcmd.ArgDef{Name: "Password", Type: dcmd.String},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
+			bot.MessageDeleteQueue.DeleteMessages(parsed.CS.ID, parsed.Msg.ID)
+
 			conf := CtxConfig(parsed.Context())
 			ms := commands.ContextMS(parsed.Context())
 
-			p, err := models.FindEconomyPlantG(parsed.Context(), parsed.CS.ID)
+			p, err := models.EconomyPlants(
+				models.EconomyPlantWhere.ChannelID.EQ(parsed.CS.ID),
+				models.EconomyPlantWhere.Password.EQ(strings.ToLower(parsed.Args[0].Str())),
+				qm.OrderBy("message_id desc"),
+			).OneG(parsed.Context())
+
 			if err != nil {
 				if errors.Cause(err) == sql.ErrNoRows {
-					return ErrorEmbed(ms, "No plant in this channel :("), nil
+					return ErrorEmbed(ms, "No plant in this channel or incorrect passowrd :("), nil
 				}
 
 				return nil, err
 			}
 
 			noPlant := false
-			noMoneyLeft := false
-			wrongPassword := false
 			pmAmount := int64(0)
 			err = common.SqlTX(func(tx *sql.Tx) error {
-				pm, err := models.EconomyPlants(qm.Where("channel_id = ?", parsed.CS.ID), qm.For("update")).One(parsed.Context(), tx)
+				pm, err := models.EconomyPlants(models.EconomyPlantWhere.MessageID.EQ(p.MessageID), qm.For("update")).One(parsed.Context(), tx)
 				if err != nil {
 					if errors.Cause(err) == sql.ErrNoRows {
 						noPlant = true
 					}
 					return err
 				}
-				pmAmount = pm.Amount
-
-				if pm.Password != "" {
-					if !strings.EqualFold(pm.Password, parsed.Args[0].Str()) {
-						wrongPassword = true
-						return nil
-					}
+				if pm.MessageID != p.MessageID {
+					noPlant = true
+					return nil
 				}
+
+				pmAmount = pm.Amount
 
 				_, err = tx.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE user_id = $2 AND guild_id = $1", parsed.GS.ID, ms.ID, pm.Amount)
 				if err != nil {
@@ -553,24 +529,16 @@ var CoreCommands = []*commands.YAGCommand{
 			})
 
 			if noPlant {
-				return ErrorEmbed(ms, "No plant in this channel :("), nil
+				return ErrorEmbed(ms, "Yikes, someone snatched it before you."), nil
 			}
 
 			if err != nil {
 				return nil, err
 			}
 
-			if noMoneyLeft {
-				return ErrorEmbed(ms, "The person that planted this didn't manage their money correctly and no longer has enough money..."), nil
-			}
-
-			if wrongPassword {
-				return ErrorEmbed(ms, "Incorrect passowrd >:u"), nil
-			}
-
 			common.BotSession.ChannelMessageDelete(parsed.CS.ID, p.MessageID)
 
-			return SimpleEmbedResponse(ms, fmt.Sprintf("Picked up **%d%s**!", pmAmount, conf.CurrencySymbol)), nil
+			return SimpleEmbedResponse(ms, fmt.Sprintf("Picked up **%s%d**!", conf.CurrencySymbol, pmAmount)), nil
 		},
 	},
 }

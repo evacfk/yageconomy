@@ -23,28 +23,31 @@ import (
 
 // EconomyPlant is an object representing the database table.
 type EconomyPlant struct {
-	ChannelID int64  `boil:"channel_id" json:"channel_id" toml:"channel_id" yaml:"channel_id"`
-	GuildID   int64  `boil:"guild_id" json:"guild_id" toml:"guild_id" yaml:"guild_id"`
-	MessageID int64  `boil:"message_id" json:"message_id" toml:"message_id" yaml:"message_id"`
-	AuthorID  int64  `boil:"author_id" json:"author_id" toml:"author_id" yaml:"author_id"`
-	Amount    int64  `boil:"amount" json:"amount" toml:"amount" yaml:"amount"`
-	Password  string `boil:"password" json:"password" toml:"password" yaml:"password"`
+	MessageID int64     `boil:"message_id" json:"message_id" toml:"message_id" yaml:"message_id"`
+	ChannelID int64     `boil:"channel_id" json:"channel_id" toml:"channel_id" yaml:"channel_id"`
+	GuildID   int64     `boil:"guild_id" json:"guild_id" toml:"guild_id" yaml:"guild_id"`
+	CreatedAt time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	AuthorID  int64     `boil:"author_id" json:"author_id" toml:"author_id" yaml:"author_id"`
+	Amount    int64     `boil:"amount" json:"amount" toml:"amount" yaml:"amount"`
+	Password  string    `boil:"password" json:"password" toml:"password" yaml:"password"`
 
 	R *economyPlantR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L economyPlantL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var EconomyPlantColumns = struct {
+	MessageID string
 	ChannelID string
 	GuildID   string
-	MessageID string
+	CreatedAt string
 	AuthorID  string
 	Amount    string
 	Password  string
 }{
+	MessageID: "message_id",
 	ChannelID: "channel_id",
 	GuildID:   "guild_id",
-	MessageID: "message_id",
+	CreatedAt: "created_at",
 	AuthorID:  "author_id",
 	Amount:    "amount",
 	Password:  "password",
@@ -52,17 +55,40 @@ var EconomyPlantColumns = struct {
 
 // Generated where
 
+type whereHelpertime_Time struct{ field string }
+
+func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.EQ, x)
+}
+func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.NEQ, x)
+}
+func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 var EconomyPlantWhere = struct {
+	MessageID whereHelperint64
 	ChannelID whereHelperint64
 	GuildID   whereHelperint64
-	MessageID whereHelperint64
+	CreatedAt whereHelpertime_Time
 	AuthorID  whereHelperint64
 	Amount    whereHelperint64
 	Password  whereHelperstring
 }{
+	MessageID: whereHelperint64{field: `message_id`},
 	ChannelID: whereHelperint64{field: `channel_id`},
 	GuildID:   whereHelperint64{field: `guild_id`},
-	MessageID: whereHelperint64{field: `message_id`},
+	CreatedAt: whereHelpertime_Time{field: `created_at`},
 	AuthorID:  whereHelperint64{field: `author_id`},
 	Amount:    whereHelperint64{field: `amount`},
 	Password:  whereHelperstring{field: `password`},
@@ -85,10 +111,10 @@ func (*economyPlantR) NewStruct() *economyPlantR {
 type economyPlantL struct{}
 
 var (
-	economyPlantColumns               = []string{"channel_id", "guild_id", "message_id", "author_id", "amount", "password"}
-	economyPlantColumnsWithoutDefault = []string{"channel_id", "guild_id", "message_id", "author_id", "amount", "password"}
+	economyPlantColumns               = []string{"message_id", "channel_id", "guild_id", "created_at", "author_id", "amount", "password"}
+	economyPlantColumnsWithoutDefault = []string{"message_id", "channel_id", "guild_id", "created_at", "author_id", "amount", "password"}
 	economyPlantColumnsWithDefault    = []string{}
-	economyPlantPrimaryKeyColumns     = []string{"channel_id"}
+	economyPlantPrimaryKeyColumns     = []string{"message_id"}
 )
 
 type (
@@ -209,13 +235,13 @@ func EconomyPlants(mods ...qm.QueryMod) economyPlantQuery {
 }
 
 // FindEconomyPlantG retrieves a single record by ID.
-func FindEconomyPlantG(ctx context.Context, channelID int64, selectCols ...string) (*EconomyPlant, error) {
-	return FindEconomyPlant(ctx, boil.GetContextDB(), channelID, selectCols...)
+func FindEconomyPlantG(ctx context.Context, messageID int64, selectCols ...string) (*EconomyPlant, error) {
+	return FindEconomyPlant(ctx, boil.GetContextDB(), messageID, selectCols...)
 }
 
 // FindEconomyPlant retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindEconomyPlant(ctx context.Context, exec boil.ContextExecutor, channelID int64, selectCols ...string) (*EconomyPlant, error) {
+func FindEconomyPlant(ctx context.Context, exec boil.ContextExecutor, messageID int64, selectCols ...string) (*EconomyPlant, error) {
 	economyPlantObj := &EconomyPlant{}
 
 	sel := "*"
@@ -223,10 +249,10 @@ func FindEconomyPlant(ctx context.Context, exec boil.ContextExecutor, channelID 
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"economy_plants\" where \"channel_id\"=$1", sel,
+		"select %s from \"economy_plants\" where \"message_id\"=$1", sel,
 	)
 
-	q := queries.Raw(query, channelID)
+	q := queries.Raw(query, messageID)
 
 	err := q.Bind(ctx, exec, economyPlantObj)
 	if err != nil {
@@ -252,6 +278,13 @@ func (o *EconomyPlant) Insert(ctx context.Context, exec boil.ContextExecutor, co
 	}
 
 	var err error
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+	}
 
 	nzDefaults := queries.NonZeroDefaultSet(economyPlantColumnsWithDefault, o)
 
@@ -470,6 +503,13 @@ func (o *EconomyPlant) Upsert(ctx context.Context, exec boil.ContextExecutor, up
 	if o == nil {
 		return errors.New("models: no economy_plants provided for upsert")
 	}
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+	}
 
 	nzDefaults := queries.NonZeroDefaultSet(economyPlantColumnsWithDefault, o)
 
@@ -589,7 +629,7 @@ func (o *EconomyPlant) Delete(ctx context.Context, exec boil.ContextExecutor) (i
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), economyPlantPrimaryKeyMapping)
-	sql := "DELETE FROM \"economy_plants\" WHERE \"channel_id\"=$1"
+	sql := "DELETE FROM \"economy_plants\" WHERE \"message_id\"=$1"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -684,7 +724,7 @@ func (o *EconomyPlant) ReloadG(ctx context.Context) error {
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *EconomyPlant) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindEconomyPlant(ctx, exec, o.ChannelID)
+	ret, err := FindEconomyPlant(ctx, exec, o.MessageID)
 	if err != nil {
 		return err
 	}
@@ -733,21 +773,21 @@ func (o *EconomyPlantSlice) ReloadAll(ctx context.Context, exec boil.ContextExec
 }
 
 // EconomyPlantExistsG checks if the EconomyPlant row exists.
-func EconomyPlantExistsG(ctx context.Context, channelID int64) (bool, error) {
-	return EconomyPlantExists(ctx, boil.GetContextDB(), channelID)
+func EconomyPlantExistsG(ctx context.Context, messageID int64) (bool, error) {
+	return EconomyPlantExists(ctx, boil.GetContextDB(), messageID)
 }
 
 // EconomyPlantExists checks if the EconomyPlant row exists.
-func EconomyPlantExists(ctx context.Context, exec boil.ContextExecutor, channelID int64) (bool, error) {
+func EconomyPlantExists(ctx context.Context, exec boil.ContextExecutor, messageID int64) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"economy_plants\" where \"channel_id\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"economy_plants\" where \"message_id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, channelID)
+		fmt.Fprintln(boil.DebugWriter, messageID)
 	}
 
-	row := exec.QueryRowContext(ctx, sql, channelID)
+	row := exec.QueryRowContext(ctx, sql, messageID)
 
 	err := row.Scan(&exists)
 	if err != nil {
