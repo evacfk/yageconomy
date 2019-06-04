@@ -390,7 +390,7 @@ var CoreCommands = []*commands.YAGCommand{
 			ms := commands.ContextMS(parsed.Context())
 			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GS.ID, parsed.CS.ID, page, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 
-				offset := (newPage - 1) * 20
+				offset := (newPage - 1) * 10
 				if offset < 0 {
 					offset = 0
 				}
@@ -398,14 +398,14 @@ var CoreCommands = []*commands.YAGCommand{
 				result, err := models.EconomyUsers(
 					models.EconomyUserWhere.GuildID.EQ(parsed.GS.ID),
 					qm.OrderBy("money_wallet + money_bank desc"),
-					qm.Limit(20),
+					qm.Limit(10),
 					qm.Offset(offset)).AllG(context.Background())
 				if err != nil {
 					return nil, err
 				}
 
-				buf := strings.Builder{}
-				buf.WriteString("Economy leaderboard:```\n")
+				embed := SimpleEmbedResponse(ms, "")
+				embed.Title = conf.CurrencySymbol + " Leaderboard"
 
 				userIDs := make([]int64, len(result))
 				for i, v := range result {
@@ -416,12 +416,15 @@ var CoreCommands = []*commands.YAGCommand{
 
 				for i, v := range result {
 					user := users[i]
-					buf.WriteString(fmt.Sprintf("#%2d: %-20s : %s%d\n", i+offset+1, user.Username, conf.CurrencySymbol, v.MoneyBank+v.MoneyWallet))
+					embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+						Name:  fmt.Sprintf("#%d %s", i+offset+1, user.Username),
+						Value: fmt.Sprintf("%s%d", conf.CurrencySymbol, v.MoneyBank+v.MoneyWallet),
+					})
+
 				}
 
-				buf.WriteString("```")
-
-				return SimpleEmbedResponse(ms, buf.String()), nil
+				return embed, nil
+				// return SimpleEmbedResponse(ms, buf.String()), nil
 			})
 
 			return nil, err
