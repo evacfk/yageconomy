@@ -9,7 +9,6 @@ import (
 	"github.com/golang/freetype/truetype"
 	"github.com/jonas747/dcmd"
 	"github.com/jonas747/discordgo"
-	"github.com/jonas747/dstate"
 	"github.com/jonas747/yageconomy/models"
 	"github.com/jonas747/yagpdb/bot"
 	"github.com/jonas747/yagpdb/bot/eventsystem"
@@ -21,6 +20,7 @@ import (
 	"image"
 	"image/color"
 	"math/rand"
+	"strconv"
 	"strings"
 )
 
@@ -58,17 +58,11 @@ func (p *Plugin) AddCommands() {
 
 	waifuContainer.AddMidlewares(economyCmdMiddleware)
 
-	waifuContainer.AddCommand(WaifuCmdTop, WaifuCmdTop.GetTrigger())
-	waifuContainer.AddCommand(WaifuCmdInfo, WaifuCmdInfo.GetTrigger())
-	waifuContainer.AddCommand(WaifuCmdClaim, WaifuCmdClaim.GetTrigger())
-	waifuContainer.AddCommand(WaifuCmdReset, WaifuCmdReset.GetTrigger())
-	waifuContainer.AddCommand(WaifuCmdTransfer, WaifuCmdTransfer.GetTrigger())
-	waifuContainer.AddCommand(WaifuCmdDivorce, WaifuCmdDivorce.GetTrigger())
-	waifuContainer.AddCommand(WaifuCmdAffinity, WaifuCmdAffinity.GetTrigger())
-	waifuContainer.AddCommand(WaifuCmdGift, WaifuCmdGift.GetTrigger())
-	waifuContainer.AddCommand(WaifuShopAdd, WaifuShopAdd.GetTrigger().SetMiddlewares(economyAdminMiddleware))
-	waifuContainer.AddCommand(WaifuShopEdit, WaifuShopEdit.GetTrigger().SetMiddlewares(economyAdminMiddleware))
-	waifuContainer.AddCommand(WaifuCmdDel, WaifuCmdDel.GetTrigger().SetMiddlewares(economyAdminMiddleware))
+	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware},
+		WaifuCmdTop, WaifuCmdInfo, WaifuCmdClaim, WaifuCmdReset, WaifuCmdTransfer, WaifuCmdDivorce, WaifuCmdAffinity, WaifuCmdGift)
+
+	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware},
+		WaifuShopAdd, WaifuShopEdit, WaifuCmdDel)
 
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, ShopCommands...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, ShopAdminCommands...)
@@ -107,11 +101,11 @@ func economyCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 
 func economyAdminMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 	return func(data *dcmd.Data) (interface{}, error) {
-		ms := commands.ContextMS(data.Context())
 		conf := CtxConfig(data.Context())
+		ms := commands.ContextMS(data.Context())
 
 		if !common.ContainsInt64SliceOneOf(ms.Roles, conf.Admins) {
-			return ErrorEmbed(ms, "This command requires you to be an economy admin"), nil
+			return ErrorEmbed(data.Msg.Author, "This command requires you to be an economy admin"), nil
 		}
 
 		return inner(data)
@@ -161,27 +155,24 @@ func CtxUser(c context.Context) *models.EconomyUser {
 	return c.Value(CtxKeyUser).(*models.EconomyUser)
 }
 
-func UserEmebdAuthor(ms *dstate.MemberState) *discordgo.MessageEmbedAuthor {
-
-	user := ms.DGoUser()
-
+func UserEmebdAuthor(user *discordgo.User) *discordgo.MessageEmbedAuthor {
 	return &discordgo.MessageEmbedAuthor{
 		Name:    user.Username + "#" + user.Discriminator,
 		IconURL: user.AvatarURL("128"),
 	}
 }
 
-func SimpleEmbedResponse(ms *dstate.MemberState, msgF string, args ...interface{}) *discordgo.MessageEmbed {
+func SimpleEmbedResponse(user *discordgo.User, msgF string, args ...interface{}) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
-		Author:      UserEmebdAuthor(ms),
+		Author:      UserEmebdAuthor(user),
 		Color:       ColorBlue,
 		Description: fmt.Sprintf(msgF, args...),
 	}
 }
 
-func ErrorEmbed(ms *dstate.MemberState, msgF string, args ...interface{}) *discordgo.MessageEmbed {
+func ErrorEmbed(user *discordgo.User, msgF string, args ...interface{}) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
-		Author:      UserEmebdAuthor(ms),
+		Author:      UserEmebdAuthor(user),
 		Color:       ColorRed,
 		Description: fmt.Sprintf(msgF, args...),
 	}
@@ -427,4 +418,84 @@ func genPlantPassword() string {
 	}
 
 	return pw
+}
+
+// UserIDArg matches a mention or a plain id, the user does not have to be a part of the server
+// The type of the ID is parsed into a int64
+type AmountArg struct{}
+
+func (ca *AmountArg) Matches(def *dcmd.ArgDef, part string) bool {
+	return true
+}
+
+func (ca *AmountArg) Parse(def *dcmd.ArgDef, part string, data *dcmd.Data) (interface{}, error) {
+	// read fixed number
+	fixed, err := strconv.ParseInt(part, 10, 64)
+	if err == nil {
+		return &AmountArgResult{
+			FixedAmount: fixed,
+			IsFixed:     true,
+		}, nil
+	}
+
+	multiplier := float64(0)
+
+	if strings.HasSuffix(part, "%") || strings.HasPrefix(part, "%") {
+		numberStr := strings.TrimSuffix(part, "%")
+		numberStr = strings.TrimPrefix(numberStr, "%")
+
+		parsed, err := strconv.ParseFloat(part, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		multiplier = parsed / 100
+	} else {
+		lower := strings.ToLower(part)
+		switch lower {
+		case "all", "everything", "*":
+			multiplier = 1
+		case "half":
+			multiplier = 0.5
+		}
+	}
+
+	return &AmountArgResult{
+		Multiplier: multiplier,
+	}, nil
+
+}
+
+func (ca *AmountArg) HelpName() string {
+	return "Amount"
+}
+
+type AmountArgResult struct {
+	IsFixed     bool
+	FixedAmount int64
+	Multiplier  float64
+}
+
+// returns the amount based on the current wallet size
+func (a *AmountArgResult) Apply(total int64) int64 {
+	if a.IsFixed {
+		return a.FixedAmount
+	}
+
+	return int64(float64(total) * a.Multiplier)
+}
+
+// same as apply but also has some restrictions built in
+func (a *AmountArgResult) ApplyWithRestrictions(total int64, currencySymbol, sourceName string, shouldBeBelowTotal bool, minAmount int64) (v int64, resp string) {
+	v = a.Apply(total)
+
+	if v < minAmount {
+		return -1, fmt.Sprintf("Amount can't be less than %s%d", currencySymbol, minAmount)
+	}
+
+	if v > total {
+		return -1, fmt.Sprintf("You don't have **%s%d** in your %s (you have **%s%d**)", currencySymbol, v, sourceName, currencySymbol, total)
+	}
+
+	return v, ""
 }

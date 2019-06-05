@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS economy_configs (
 	fishing_min_win_amount BIGINT NOT NULL,
 	fishing_cooldown INT NOT NULL,
 
-	rob_fine INT NOT NULL
+	rob_fine INT NOT NULL,
+	rob_cooldown INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS economy_users (
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS economy_users (
 	gambling_boost_percentage INT NOT NULL,
 
 	last_interest_update TIMESTAMP WITH TIME ZONE NOT NULL,
+	last_rob_attempt TIMESTAMP WITH TIME ZONE NOT NULL,
 
 	PRIMARY KEY(guild_id, user_id)
 );

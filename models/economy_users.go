@@ -39,6 +39,7 @@ type EconomyUser struct {
 	FishCaugth              int64            `boil:"fish_caugth" json:"fish_caugth" toml:"fish_caugth" yaml:"fish_caugth"`
 	GamblingBoostPercentage int              `boil:"gambling_boost_percentage" json:"gambling_boost_percentage" toml:"gambling_boost_percentage" yaml:"gambling_boost_percentage"`
 	LastInterestUpdate      time.Time        `boil:"last_interest_update" json:"last_interest_update" toml:"last_interest_update" yaml:"last_interest_update"`
+	LastRobAttempt          time.Time        `boil:"last_rob_attempt" json:"last_rob_attempt" toml:"last_rob_attempt" yaml:"last_rob_attempt"`
 
 	R *economyUserR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L economyUserL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -60,6 +61,7 @@ var EconomyUserColumns = struct {
 	FishCaugth              string
 	GamblingBoostPercentage string
 	LastInterestUpdate      string
+	LastRobAttempt          string
 }{
 	GuildID:                 "guild_id",
 	UserID:                  "user_id",
@@ -76,6 +78,7 @@ var EconomyUserColumns = struct {
 	FishCaugth:              "fish_caugth",
 	GamblingBoostPercentage: "gambling_boost_percentage",
 	LastInterestUpdate:      "last_interest_update",
+	LastRobAttempt:          "last_rob_attempt",
 }
 
 // Generated where
@@ -96,6 +99,7 @@ var EconomyUserWhere = struct {
 	FishCaugth              whereHelperint64
 	GamblingBoostPercentage whereHelperint
 	LastInterestUpdate      whereHelpertime_Time
+	LastRobAttempt          whereHelpertime_Time
 }{
 	GuildID:                 whereHelperint64{field: `guild_id`},
 	UserID:                  whereHelperint64{field: `user_id`},
@@ -112,6 +116,7 @@ var EconomyUserWhere = struct {
 	FishCaugth:              whereHelperint64{field: `fish_caugth`},
 	GamblingBoostPercentage: whereHelperint{field: `gambling_boost_percentage`},
 	LastInterestUpdate:      whereHelpertime_Time{field: `last_interest_update`},
+	LastRobAttempt:          whereHelpertime_Time{field: `last_rob_attempt`},
 }
 
 // EconomyUserRels is where relationship names are stored.
@@ -131,8 +136,8 @@ func (*economyUserR) NewStruct() *economyUserR {
 type economyUserL struct{}
 
 var (
-	economyUserColumns               = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_items", "waifu_item_worth", "waifu_affinity_towards", "fish_caugth", "gambling_boost_percentage", "last_interest_update"}
-	economyUserColumnsWithoutDefault = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_items", "waifu_item_worth", "waifu_affinity_towards", "fish_caugth", "gambling_boost_percentage", "last_interest_update"}
+	economyUserColumns               = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_items", "waifu_item_worth", "waifu_affinity_towards", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt"}
+	economyUserColumnsWithoutDefault = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_items", "waifu_item_worth", "waifu_affinity_towards", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt"}
 	economyUserColumnsWithDefault    = []string{}
 	economyUserPrimaryKeyColumns     = []string{"guild_id", "user_id"}
 )

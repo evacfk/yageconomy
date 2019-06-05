@@ -34,6 +34,7 @@ type PostConfigForm struct {
 	AutoPlantMax        int64
 	AutoPlantChance     float64
 	RobFine             int
+	RobCooldown         int
 	FishingCooldown     int
 	FishingMaxwinAmount int64
 	FishingMinWinAmount int64
@@ -57,6 +58,7 @@ func (p PostConfigForm) DBModel() *models.EconomyConfig {
 		AutoPlantMax:        p.AutoPlantMax,
 		AutoPlantChance:     types.NewDecimal(decimal.New(int64(p.AutoPlantChance*100), 4)),
 		RobFine:             p.RobFine,
+		RobCooldown:         p.RobCooldown,
 		FishingCooldown:     p.FishingCooldown,
 		FishingMaxWinAmount: p.FishingMaxwinAmount,
 		FishingMinWinAmount: p.FishingMinWinAmount,

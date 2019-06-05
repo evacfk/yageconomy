@@ -3,7 +3,6 @@ package yageconomy
 import (
 	"fmt"
 	"github.com/jonas747/dcmd"
-	"github.com/jonas747/dstate"
 	"github.com/jonas747/yageconomy/models"
 	"github.com/jonas747/yagpdb/commands"
 	"github.com/jonas747/yagpdb/common"
@@ -21,22 +20,23 @@ var GameCommands = []*commands.YAGCommand{
 		Description:  "Bet on heads or tail, if you guess correct you win 2x your bet",
 		RequiredArgs: 2,
 		Arguments: []*dcmd.ArgDef{
-			&dcmd.ArgDef{Name: "Amount", Type: dcmd.Int},
+			&dcmd.ArgDef{Name: "Amount", Type: &AmountArg{}},
 			&dcmd.ArgDef{Name: "Side", Type: dcmd.String},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			ms := commands.ContextMS(parsed.Context())
+			u := parsed.Msg.Author
 
-			amount := parsed.Args[0].Int()
-			moneyIn := amount
-			if amount < 1 {
-				return ErrorEmbed(ms, "Amount too small"), nil
+			amount, resp := parsed.Args[0].Value.(*AmountArgResult).ApplyWithRestrictions(account.MoneyWallet, conf.CurrencySymbol, "wallet", true, 1)
+			if resp != "" {
+				return ErrorEmbed(u, resp), nil
 			}
 
-			if int64(amount) > account.MoneyWallet {
-				return ErrorEmbed(ms, "You don't have that amount in your wallet"), nil
+			moneyIn := amount
+
+			if amount > account.MoneyWallet {
+				return ErrorEmbed(u, "You don't have that amount in your wallet"), nil
 			}
 
 			guessedHeads := strings.HasPrefix(strings.ToLower(parsed.Args[1].Str()), "h")
@@ -44,15 +44,15 @@ var GameCommands = []*commands.YAGCommand{
 			isHeads := rand.Intn(2) == 0
 
 			won := false
-			winningsLosses := int64(amount)
+			winningsLosses := amount
 			var err error
 
 			if (isHeads && guessedHeads) || (!isHeads && !guessedHeads) {
 				won = true
-				winningsLosses = ApplyGamblingBoost(account, int64(amount))
-				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, 0, ms.ID, 0, winningsLosses)
+				winningsLosses = ApplyGamblingBoost(account, amount)
+				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, 0, u.ID, 0, winningsLosses)
 			} else {
-				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, ms.ID, common.BotUser.ID, winningsLosses, winningsLosses)
+				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, u.ID, common.BotUser.ID, winningsLosses, winningsLosses)
 			}
 
 			if err != nil {
@@ -66,12 +66,12 @@ var GameCommands = []*commands.YAGCommand{
 
 			msg := ""
 			if won {
-				msg = fmt.Sprintf("Result is... **%s**: You won! Awarded with **%s%d**", strResult, conf.CurrencySymbol, int64(amount)+winningsLosses)
+				msg = fmt.Sprintf("Result is... **%s**: You won! Awarded with **%s%d**", strResult, conf.CurrencySymbol, amount+winningsLosses)
 			} else {
 				msg = fmt.Sprintf("Result is... **%s**: You lost... you're now **%s%d** poorer...", strResult, conf.CurrencySymbol, moneyIn)
 			}
 
-			return SimpleEmbedResponse(ms, msg), nil
+			return SimpleEmbedResponse(u, msg), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -81,20 +81,16 @@ var GameCommands = []*commands.YAGCommand{
 		Description:  "Rolls 1-100, Rolling over 66 yields x2 of your bet, over 90 -> x4 and 100 -> x10.",
 		RequiredArgs: 1,
 		Arguments: []*dcmd.ArgDef{
-			&dcmd.ArgDef{Name: "Bet", Type: dcmd.Int},
+			&dcmd.ArgDef{Name: "Bet", Type: &AmountArg{}},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			ms := commands.ContextMS(parsed.Context())
+			u := parsed.Msg.Author
 
-			amount := parsed.Args[0].Int()
-			if amount < 1 {
-				return ErrorEmbed(ms, "Amount too small"), nil
-			}
-
-			if int64(amount) > account.MoneyWallet {
-				return ErrorEmbed(ms, "You don't have that amount in your wallet"), nil
+			amount, resp := parsed.Args[0].Value.(*AmountArgResult).ApplyWithRestrictions(account.MoneyWallet, conf.CurrencySymbol, "wallet", true, 1)
+			if resp != "" {
+				return ErrorEmbed(u, resp), nil
 			}
 
 			walletMod := -amount
@@ -113,11 +109,11 @@ var GameCommands = []*commands.YAGCommand{
 			var err error
 			if won {
 				// transfer winnings into our account
-				walletMod = int(ApplyGamblingBoost(account, int64(walletMod)))
-				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, 0, ms.ID, 0, int64(walletMod))
+				walletMod = ApplyGamblingBoost(account, walletMod)
+				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, 0, u.ID, 0, walletMod)
 			} else {
 				// transfer losses into bot account
-				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, ms.ID, common.BotUser.ID, int64(amount), int64(amount))
+				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, u.ID, common.BotUser.ID, amount, amount)
 			}
 			if err != nil {
 				return nil, err
@@ -130,7 +126,7 @@ var GameCommands = []*commands.YAGCommand{
 				msg = fmt.Sprintf("Rolled **%d** and lost... you're now **%s%d** poorer...", roll, conf.CurrencySymbol, amount)
 			}
 
-			return SimpleEmbedResponse(ms, msg), nil
+			return SimpleEmbedResponse(u, msg), nil
 		},
 	}, &commands.YAGCommand{
 		CmdCategory:  CategoryEconomy,
@@ -138,17 +134,22 @@ var GameCommands = []*commands.YAGCommand{
 		Description:  "Steals money from someone, the chance of suceeding = your networth / (their cash + your networth)",
 		RequiredArgs: 1,
 		Arguments: []*dcmd.ArgDef{
-			&dcmd.ArgDef{Name: "Target", Type: &commands.MemberArg{}},
+			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			target := parsed.Args[0].Value.(*dstate.MemberState)
+			target := parsed.Args[0].User()
 
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			ms := commands.ContextMS(parsed.Context())
+			u := parsed.Msg.Author
 
 			if conf.RobFine < 1 {
-				return ErrorEmbed(ms, "No fine as been set, as a result the rob command has been disabled"), nil
+				return ErrorEmbed(u, "No fine as been set, as a result the rob command has been disabled"), nil
+			}
+
+			cooldownLeft := account.LastRobAttempt.Add(time.Second * time.Duration(conf.RobCooldown)).Sub(time.Now())
+			if cooldownLeft > 0 {
+				return ErrorEmbed(u, "The rob command is still on cooldown for you for another %s", common.HumanizeDuration(common.DurationPrecisionSeconds, cooldownLeft)), nil
 			}
 
 			targetAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
@@ -157,11 +158,11 @@ var GameCommands = []*commands.YAGCommand{
 			}
 
 			if targetAccount.MoneyWallet < 1 {
-				return ErrorEmbed(ms, "This person has no money left in their wallet :("), nil
+				return ErrorEmbed(u, "This person has no money left in their wallet :("), nil
 			}
 
 			if account.MoneyWallet < int64(conf.RobFine) {
-				return ErrorEmbed(ms, "You don't have enough money in your wallet to pay the fine if you fail"), nil
+				return ErrorEmbed(u, "You don't have enough money in your wallet to pay the fine if you fail"), nil
 			}
 
 			sucessChance := float64(account.MoneyWallet+account.MoneyBank) / float64(targetAccount.MoneyWallet+account.MoneyWallet+account.MoneyBank)
@@ -170,22 +171,22 @@ var GameCommands = []*commands.YAGCommand{
 
 				amount := targetAccount.MoneyWallet
 
-				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, target.ID, ms.ID, amount, ApplyGamblingBoost(account, amount))
+				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, target.ID, u.ID, amount, ApplyGamblingBoost(account, amount))
 				if err != nil {
 					return nil, err
 				}
 
-				return SimpleEmbedResponse(ms, "You sucessfully robbed **%s** for **%s%d**!", target.Username, conf.CurrencySymbol, ApplyGamblingBoost(account, amount)), nil
+				return SimpleEmbedResponse(u, "You sucessfully robbed **%s** for **%s%d**!", target.Username, conf.CurrencySymbol, ApplyGamblingBoost(account, amount)), nil
 			} else {
 				fine := int64(float64(conf.RobFine/100) * float64(account.MoneyWallet))
 
-				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, ms.ID, common.BotUser.ID, fine, fine)
+				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, u.ID, common.BotUser.ID, fine, fine)
 
 				if err != nil {
 					return nil, err
 				}
 
-				return ErrorEmbed(ms, "You failed robbing **%s**, you were fined **%s%d** as a result, hopefully you have learned your lesson now.",
+				return ErrorEmbed(u, "You failed robbing **%s**, you were fined **%s%d** as a result, hopefully you have learned your lesson now.",
 					target.Username, conf.CurrencySymbol, fine), nil
 			}
 
@@ -200,9 +201,10 @@ var GameCommands = []*commands.YAGCommand{
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
 			ms := commands.ContextMS(parsed.Context())
+			u := parsed.Msg.Author
 
 			if conf.FishingMaxWinAmount < 1 {
-				return ErrorEmbed(ms, "Fishing not set up on this server"), nil
+				return ErrorEmbed(u, "Fishing not set up on this server"), nil
 			}
 
 			wonAmount := int64(0)
@@ -227,15 +229,14 @@ var GameCommands = []*commands.YAGCommand{
 
 			if rows < 1 {
 				timeToWait := account.LastFishing.Add(time.Duration(conf.FishingCooldown) * time.Minute).Sub(time.Now())
-				return ErrorEmbed(ms, "You can't fish again yet, please wait another %s.", common.HumanizeDuration(common.DurationPrecisionSeconds, timeToWait)), nil
+				return ErrorEmbed(u, "You can't fish again yet, please wait another %s.", common.HumanizeDuration(common.DurationPrecisionSeconds, timeToWait)), nil
 			}
 
 			if wonAmount == 0 {
-				return SimpleEmbedResponse(ms, "Aww man, you let your fish slip away..."), nil
+				return SimpleEmbedResponse(u, "Aww man, you let your fish slip away..."), nil
 			}
 
-			return SimpleEmbedResponse(ms, "Nice! You caught a fish worth **%s%d**!", conf.CurrencySymbol, wonAmount), nil
-
+			return SimpleEmbedResponse(u, "Nice! You caught a fish worth **%s%d**!", conf.CurrencySymbol, wonAmount), nil
 		},
 	},
 }

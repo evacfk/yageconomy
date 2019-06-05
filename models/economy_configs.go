@@ -44,6 +44,7 @@ type EconomyConfig struct {
 	FishingMinWinAmount int64            `boil:"fishing_min_win_amount" json:"fishing_min_win_amount" toml:"fishing_min_win_amount" yaml:"fishing_min_win_amount"`
 	FishingCooldown     int              `boil:"fishing_cooldown" json:"fishing_cooldown" toml:"fishing_cooldown" yaml:"fishing_cooldown"`
 	RobFine             int              `boil:"rob_fine" json:"rob_fine" toml:"rob_fine" yaml:"rob_fine"`
+	RobCooldown         int              `boil:"rob_cooldown" json:"rob_cooldown" toml:"rob_cooldown" yaml:"rob_cooldown"`
 
 	R *economyConfigR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L economyConfigL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -70,6 +71,7 @@ var EconomyConfigColumns = struct {
 	FishingMinWinAmount string
 	FishingCooldown     string
 	RobFine             string
+	RobCooldown         string
 }{
 	GuildID:             "guild_id",
 	Enabled:             "enabled",
@@ -91,6 +93,7 @@ var EconomyConfigColumns = struct {
 	FishingMinWinAmount: "fishing_min_win_amount",
 	FishingCooldown:     "fishing_cooldown",
 	RobFine:             "rob_fine",
+	RobCooldown:         "rob_cooldown",
 }
 
 // Generated where
@@ -196,6 +199,7 @@ var EconomyConfigWhere = struct {
 	FishingMinWinAmount whereHelperint64
 	FishingCooldown     whereHelperint
 	RobFine             whereHelperint
+	RobCooldown         whereHelperint
 }{
 	GuildID:             whereHelperint64{field: `guild_id`},
 	Enabled:             whereHelperbool{field: `enabled`},
@@ -217,6 +221,7 @@ var EconomyConfigWhere = struct {
 	FishingMinWinAmount: whereHelperint64{field: `fishing_min_win_amount`},
 	FishingCooldown:     whereHelperint{field: `fishing_cooldown`},
 	RobFine:             whereHelperint{field: `rob_fine`},
+	RobCooldown:         whereHelperint{field: `rob_cooldown`},
 }
 
 // EconomyConfigRels is where relationship names are stored.
@@ -236,8 +241,8 @@ func (*economyConfigR) NewStruct() *economyConfigR {
 type economyConfigL struct{}
 
 var (
-	economyConfigColumns               = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine"}
-	economyConfigColumnsWithoutDefault = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine"}
+	economyConfigColumns               = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown"}
+	economyConfigColumnsWithoutDefault = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown"}
 	economyConfigColumnsWithDefault    = []string{}
 	economyConfigPrimaryKeyColumns     = []string{"guild_id"}
 )

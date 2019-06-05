@@ -55,5 +55,8 @@ func DefaultConfig(g int64) *models.EconomyConfig {
 		AutoPlantMin:    50,
 		AutoPlantMax:    200,
 		AutoPlantChance: types.NewDecimal(decimal.New(2, 2)),
+
+		RobFine:     25,
+		RobCooldown: 600,
 	}
 }
