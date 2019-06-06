@@ -6,6 +6,7 @@ import (
 	"github.com/jonas747/yageconomy/models"
 	"github.com/jonas747/yagpdb/commands"
 	"github.com/jonas747/yagpdb/common"
+	"github.com/volatiletech/sqlboiler/boil"
 	"math/rand"
 	"strings"
 	"time"
@@ -165,6 +166,12 @@ var GameCommands = []*commands.YAGCommand{
 				return ErrorEmbed(u, "You don't have enough money in your wallet to pay the fine if you fail"), nil
 			}
 
+			account.LastRobAttempt = time.Now()
+			_, err = account.UpdateG(parsed.Context(), boil.Whitelist("last_rob_attempt"))
+			if err != nil {
+				return nil, err
+			}
+
 			sucessChance := float64(account.MoneyWallet+account.MoneyBank) / float64(targetAccount.MoneyWallet+account.MoneyWallet+account.MoneyBank)
 			if rand.Float64() < sucessChance {
 				// sucessfully robbed them
@@ -178,7 +185,7 @@ var GameCommands = []*commands.YAGCommand{
 
 				return SimpleEmbedResponse(u, "You sucessfully robbed **%s** for **%s%d**!", target.Username, conf.CurrencySymbol, ApplyGamblingBoost(account, amount)), nil
 			} else {
-				fine := int64(float64(conf.RobFine/100) * float64(account.MoneyWallet))
+				fine := int64(float64(conf.RobFine) / 100 * float64(account.MoneyWallet+account.MoneyBank))
 
 				err = TransferMoneyWallet(parsed.Context(), nil, conf, false, u.ID, common.BotUser.ID, fine, fine)
 

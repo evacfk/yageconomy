@@ -575,7 +575,7 @@ var CoreAdminCommands = []*commands.YAGCommand{
 				return nil, err
 			}
 
-			if n > 0 {
+			if n < 1 {
 				return ErrorEmbed(u, "That user did not have an account"), nil
 			}
 
