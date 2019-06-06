@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jonas747/dcmd"
 	"github.com/jonas747/discordgo"
+	"github.com/jonas747/dstate"
 	"github.com/jonas747/yageconomy/models"
 	"github.com/jonas747/yagpdb/bot"
 	"github.com/jonas747/yagpdb/bot/paginatedmessages"
@@ -14,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -129,96 +131,6 @@ var CoreCommands = []*commands.YAGCommand{
 			}
 
 			return SimpleEmbedResponse(u, "Deposited **%s%d** Into your bank account, your bank now contains **%s%d**", conf.CurrencySymbol, amount, conf.CurrencySymbol, account.MoneyBank), nil
-		},
-	},
-	&commands.YAGCommand{
-		CmdCategory:  CategoryEconomy,
-		Name:         "Award",
-		Description:  "Award a member of the server some money (admins only)",
-		RequiredArgs: 2,
-		Arguments: []*dcmd.ArgDef{
-			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
-			&dcmd.ArgDef{Name: "Amount", Type: dcmd.Int},
-			&dcmd.ArgDef{Name: "Reason", Type: dcmd.String},
-		},
-		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			target := parsed.Args[0].User()
-
-			conf := CtxConfig(parsed.Context())
-			ms := commands.ContextMS(parsed.Context())
-			u := parsed.Msg.Author
-
-			amount := parsed.Args[1].Int()
-			if amount < 1 {
-				return ErrorEmbed(u, "Amount too small"), nil
-			}
-
-			if !common.ContainsInt64SliceOneOf(conf.Admins, ms.Roles) {
-				return ErrorEmbed(u, "You're not a economy admin"), nil
-			}
-
-			// esnure that the account exists
-			_, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
-			if err != nil {
-				return nil, err
-			}
-
-			_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, target.ID, amount)
-			if err != nil {
-				return nil, err
-			}
-
-			extraStr := ""
-			if parsed.Args[2].Str() != "" {
-				extraStr = " with the message: **" + parsed.Args[2].Str() + "**"
-			}
-
-			return SimpleEmbedResponse(u, "Awarded **%s** with %s%d%s", target.Username, conf.CurrencySymbol, amount, extraStr), nil
-		},
-	},
-	&commands.YAGCommand{
-		CmdCategory:  CategoryEconomy,
-		Name:         "Take",
-		Description:  "Takes away money from someone (admins only)",
-		RequiredArgs: 2,
-		Arguments: []*dcmd.ArgDef{
-			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
-			&dcmd.ArgDef{Name: "Amount", Type: &AmountArg{}},
-			&dcmd.ArgDef{Name: "Reason", Type: dcmd.String},
-		},
-		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			target := parsed.Args[0].User()
-
-			conf := CtxConfig(parsed.Context())
-			ms := commands.ContextMS(parsed.Context())
-			u := parsed.Msg.Author
-
-			if !common.ContainsInt64SliceOneOf(conf.Admins, ms.Roles) {
-				return ErrorEmbed(u, "You're not a economy admin"), nil
-			}
-
-			// esnure that the account exists
-			tAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
-			if err != nil {
-				return nil, err
-			}
-
-			amount, resp := parsed.Args[1].Value.(*AmountArgResult).ApplyWithRestrictions(tAccount.MoneyWallet, conf.CurrencySymbol, "wallet", false, 1)
-			if resp != "" {
-				return ErrorEmbed(u, resp), nil
-			}
-
-			_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, target.ID, amount)
-			if err != nil {
-				return nil, err
-			}
-
-			extraStr := ""
-			if parsed.Args[2].Str() != "" {
-				extraStr = " with the message: **" + parsed.Args[2].Str() + "**"
-			}
-
-			return SimpleEmbedResponse(u, "Took away %s%d from **%s**%s", conf.CurrencySymbol, amount, target.Username, extraStr), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -463,4 +375,245 @@ var CoreCommands = []*commands.YAGCommand{
 			return SimpleEmbedResponse(u, fmt.Sprintf("Picked up **%s%d**!", conf.CurrencySymbol, pmAmount)), nil
 		},
 	},
+}
+
+var CoreAdminCommands = []*commands.YAGCommand{
+	&commands.YAGCommand{
+		CmdCategory:  CategoryEconomy,
+		Name:         "Award",
+		Description:  "Award a member of the server some money (admins only)",
+		RequiredArgs: 2,
+		Arguments: []*dcmd.ArgDef{
+			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
+			&dcmd.ArgDef{Name: "Amount", Type: &dcmd.IntArg{Min: 1, Max: 0xfffffffffffffff}},
+			&dcmd.ArgDef{Name: "Reason", Type: dcmd.String},
+		},
+		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
+			target := parsed.Args[0].User()
+
+			conf := CtxConfig(parsed.Context())
+			u := parsed.Msg.Author
+
+			amount := parsed.Args[1].Int()
+
+			// esnure that the account exists
+			_, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, target.ID, amount)
+			if err != nil {
+				return nil, err
+			}
+
+			extraStr := ""
+			if parsed.Args[2].Str() != "" {
+				extraStr = " with the message: **" + parsed.Args[2].Str() + "**"
+			}
+
+			return SimpleEmbedResponse(u, "Awarded **%s** with %s%d%s", target.Username, conf.CurrencySymbol, amount, extraStr), nil
+		},
+	},
+	&commands.YAGCommand{
+		CmdCategory:  CategoryEconomy,
+		Name:         "AwardAll",
+		Description:  "Award all members with the target role",
+		RequiredArgs: 2,
+		Arguments: []*dcmd.ArgDef{
+			&dcmd.ArgDef{Name: "Target", Type: dcmd.String},
+			&dcmd.ArgDef{Name: "Amount", Type: &dcmd.IntArg{Min: 1, Max: 0xfffffffffffffff}},
+		},
+		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
+
+			conf := CtxConfig(parsed.Context())
+			u := parsed.Msg.Author
+
+			target := FindRole(parsed.GS, parsed.Args[0].Str())
+			if target == nil {
+				return ErrorEmbed(u, "Unknown role"), nil
+			}
+
+			amount := parsed.Args[1].Int64()
+
+			bot.BatchMemberJobManager.NewBatchMemberJob(parsed.GS.ID, func(g int64, members []*discordgo.Member) {
+				numAwarded := 0
+				for _, m := range members {
+					if !common.ContainsInt64Slice(m.Roles, target.ID) {
+						continue
+					}
+					numAwarded++
+
+					// esnure that the account exists
+					_, created, err := GetCreateAccount(context.Background(), m.User.ID, g, conf.StartBalance+amount)
+					if err != nil {
+						logger.WithError(err).Error("failed retrieving account")
+						return
+					}
+
+					if !created {
+						_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, m.User.ID, amount)
+						if err != nil {
+							logger.WithError(err).Error("failed awarding money")
+						}
+					}
+				}
+
+				common.BotSession.ChannelMessageSendEmbed(parsed.CS.ID, SimpleEmbedResponse(u, "Gave %d members **%s%d**", numAwarded, conf.CurrencySymbol, amount))
+			})
+
+			return SimpleEmbedResponse(u, "Started the job..."), nil
+		},
+	},
+	&commands.YAGCommand{
+		CmdCategory:  CategoryEconomy,
+		Name:         "Take",
+		Description:  "Takes away money from someone (admins only)",
+		RequiredArgs: 2,
+		Arguments: []*dcmd.ArgDef{
+			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
+			&dcmd.ArgDef{Name: "Amount", Type: &AmountArg{}},
+			&dcmd.ArgDef{Name: "Reason", Type: dcmd.String},
+		},
+		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
+			target := parsed.Args[0].User()
+
+			conf := CtxConfig(parsed.Context())
+			u := parsed.Msg.Author
+
+			// esnure that the account exists
+			tAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+			if err != nil {
+				return nil, err
+			}
+
+			amount, resp := parsed.Args[1].Value.(*AmountArgResult).ApplyWithRestrictions(tAccount.MoneyWallet+tAccount.MoneyBank, conf.CurrencySymbol, "wallet", false, 1)
+			if resp != "" {
+				return ErrorEmbed(u, resp), nil
+			}
+
+			_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, target.ID, amount)
+			if err != nil {
+				return nil, err
+			}
+
+			extraStr := ""
+			if parsed.Args[2].Str() != "" {
+				extraStr = " with the message: **" + parsed.Args[2].Str() + "**"
+			}
+
+			return SimpleEmbedResponse(u, "Took away %s%d from **%s**%s", conf.CurrencySymbol, amount, target.Username, extraStr), nil
+		},
+	},
+	&commands.YAGCommand{
+		CmdCategory:  CategoryEconomy,
+		Name:         "TakeAll",
+		Description:  "Takes away money from all the users with the role",
+		RequiredArgs: 2,
+		Arguments: []*dcmd.ArgDef{
+			&dcmd.ArgDef{Name: "Target", Type: dcmd.String},
+			&dcmd.ArgDef{Name: "Amount", Type: &AmountArg{}},
+		},
+		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
+
+			conf := CtxConfig(parsed.Context())
+			u := parsed.Msg.Author
+
+			target := FindRole(parsed.GS, parsed.Args[0].Str())
+			if target == nil {
+				return ErrorEmbed(u, "Unknown role"), nil
+			}
+
+			bot.BatchMemberJobManager.NewBatchMemberJob(parsed.GS.ID, func(g int64, members []*discordgo.Member) {
+				numTaken := 0
+				for _, m := range members {
+					if !common.ContainsInt64Slice(m.Roles, target.ID) {
+						continue
+					}
+					numTaken++
+
+					// esnure that the account exists
+					account, _, err := GetCreateAccount(context.Background(), m.User.ID, g, conf.StartBalance)
+					if err != nil {
+						logger.WithError(err).Error("failed retrieving account")
+						return
+					}
+
+					amount := parsed.Args[1].Value.(*AmountArgResult).Apply(account.MoneyBank + account.MoneyWallet)
+					account.MoneyWallet -= amount
+					if account.MoneyWallet < 0 {
+						account.MoneyBank += account.MoneyWallet
+					}
+
+					_, err = account.UpdateG(context.Background(), boil.Whitelist("money_wallet", "money_bank"))
+					if err != nil {
+						logger.WithError(err).Error("failed taking away money")
+					}
+				}
+
+				common.BotSession.ChannelMessageSendEmbed(parsed.CS.ID, SimpleEmbedResponse(u, "Took away from %d members", numTaken))
+			})
+
+			return SimpleEmbedResponse(u, "Started the job..."), nil
+		},
+	},
+	&commands.YAGCommand{
+		CmdCategory:  CategoryEconomy,
+		Name:         "DelUser",
+		Description:  "Takes away money from someone (admins only)",
+		RequiredArgs: 2,
+		Arguments: []*dcmd.ArgDef{
+			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
+		},
+		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
+			target := parsed.Args[0].User()
+
+			u := parsed.Msg.Author
+
+			n, err := models.EconomyUsers(models.EconomyUserWhere.GuildID.EQ(parsed.GS.ID), models.EconomyUserWhere.UserID.EQ(target.ID)).DeleteAll(parsed.Context(), common.PQ)
+			if err != nil {
+				return nil, err
+			}
+
+			if n > 0 {
+				return ErrorEmbed(u, "That user did not have an account"), nil
+			}
+
+			return SimpleEmbedResponse(u, "Deleted economy account owned by **%s#%s**", target.Username, target.Discriminator), nil
+		},
+	},
+}
+
+func FindRole(gs *dstate.GuildState, searchStr string) *discordgo.Role {
+	gs.RLock()
+	defer gs.RUnlock()
+
+	parsedSearch, _ := strconv.ParseInt(searchStr, 10, 64)
+
+	if strings.HasPrefix(searchStr, "<@&") && strings.HasSuffix(searchStr, ">") {
+		// attempt to parse the mention
+		trimmed := strings.TrimPrefix(searchStr, "<@&")
+		trimmed = strings.TrimSuffix(searchStr, ">")
+		parsedSearch, _ = strconv.ParseInt(trimmed, 10, 64)
+	}
+
+	// incase it was just @ and the role name
+	searchTrimedPrefix := strings.TrimPrefix(searchStr, "@")
+
+	for _, v := range gs.Guild.Roles {
+		if parsedSearch != 0 && v.ID == parsedSearch {
+			return v
+		}
+
+		if strings.EqualFold(searchStr, v.Name) {
+			return v
+		}
+
+		if strings.EqualFold(searchTrimedPrefix, v.Name) {
+			return v
+		}
+
+	}
+
+	return nil
 }

@@ -427,7 +427,7 @@ func testEconomyUsersSelect(t *testing.T) {
 }
 
 var (
-	economyUserDBTypes = map[string]string{`GuildID`: `bigint`, `UserID`: `bigint`, `MoneyBank`: `bigint`, `MoneyWallet`: `bigint`, `LastDailyClaim`: `timestamp with time zone`, `LastChatmoneyClaim`: `timestamp with time zone`, `LastFishing`: `timestamp with time zone`, `WaifudBy`: `bigint`, `Waifus`: `ARRAYbigint`, `WaifuItems`: `ARRAYbigint`, `WaifuItemWorth`: `bigint`, `WaifuAffinityTowards`: `bigint`, `FishCaugth`: `bigint`, `GamblingBoostPercentage`: `integer`, `LastInterestUpdate`: `timestamp with time zone`, `LastRobAttempt`: `timestamp with time zone`}
+	economyUserDBTypes = map[string]string{`GuildID`: `bigint`, `UserID`: `bigint`, `MoneyBank`: `bigint`, `MoneyWallet`: `bigint`, `LastDailyClaim`: `timestamp with time zone`, `LastChatmoneyClaim`: `timestamp with time zone`, `LastFishing`: `timestamp with time zone`, `WaifudBy`: `bigint`, `Waifus`: `ARRAYbigint`, `WaifuItemWorth`: `bigint`, `WaifuLastClaimAmount`: `bigint`, `WaifuExtraWorth`: `bigint`, `WaifuAffinityTowards`: `bigint`, `WaifuDivorces`: `integer`, `WaifuAffinityChanges`: `integer`, `FishCaugth`: `bigint`, `GamblingBoostPercentage`: `integer`, `LastInterestUpdate`: `timestamp with time zone`, `LastRobAttempt`: `timestamp with time zone`}
 	_                  = bytes.MinRead
 )
 

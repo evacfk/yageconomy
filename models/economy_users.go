@@ -33,9 +33,12 @@ type EconomyUser struct {
 	LastFishing             time.Time        `boil:"last_fishing" json:"last_fishing" toml:"last_fishing" yaml:"last_fishing"`
 	WaifudBy                int64            `boil:"waifud_by" json:"waifud_by" toml:"waifud_by" yaml:"waifud_by"`
 	Waifus                  types.Int64Array `boil:"waifus" json:"waifus,omitempty" toml:"waifus" yaml:"waifus,omitempty"`
-	WaifuItems              types.Int64Array `boil:"waifu_items" json:"waifu_items,omitempty" toml:"waifu_items" yaml:"waifu_items,omitempty"`
 	WaifuItemWorth          int64            `boil:"waifu_item_worth" json:"waifu_item_worth" toml:"waifu_item_worth" yaml:"waifu_item_worth"`
+	WaifuLastClaimAmount    int64            `boil:"waifu_last_claim_amount" json:"waifu_last_claim_amount" toml:"waifu_last_claim_amount" yaml:"waifu_last_claim_amount"`
+	WaifuExtraWorth         int64            `boil:"waifu_extra_worth" json:"waifu_extra_worth" toml:"waifu_extra_worth" yaml:"waifu_extra_worth"`
 	WaifuAffinityTowards    int64            `boil:"waifu_affinity_towards" json:"waifu_affinity_towards" toml:"waifu_affinity_towards" yaml:"waifu_affinity_towards"`
+	WaifuDivorces           int              `boil:"waifu_divorces" json:"waifu_divorces" toml:"waifu_divorces" yaml:"waifu_divorces"`
+	WaifuAffinityChanges    int              `boil:"waifu_affinity_changes" json:"waifu_affinity_changes" toml:"waifu_affinity_changes" yaml:"waifu_affinity_changes"`
 	FishCaugth              int64            `boil:"fish_caugth" json:"fish_caugth" toml:"fish_caugth" yaml:"fish_caugth"`
 	GamblingBoostPercentage int              `boil:"gambling_boost_percentage" json:"gambling_boost_percentage" toml:"gambling_boost_percentage" yaml:"gambling_boost_percentage"`
 	LastInterestUpdate      time.Time        `boil:"last_interest_update" json:"last_interest_update" toml:"last_interest_update" yaml:"last_interest_update"`
@@ -55,9 +58,12 @@ var EconomyUserColumns = struct {
 	LastFishing             string
 	WaifudBy                string
 	Waifus                  string
-	WaifuItems              string
 	WaifuItemWorth          string
+	WaifuLastClaimAmount    string
+	WaifuExtraWorth         string
 	WaifuAffinityTowards    string
+	WaifuDivorces           string
+	WaifuAffinityChanges    string
 	FishCaugth              string
 	GamblingBoostPercentage string
 	LastInterestUpdate      string
@@ -72,9 +78,12 @@ var EconomyUserColumns = struct {
 	LastFishing:             "last_fishing",
 	WaifudBy:                "waifud_by",
 	Waifus:                  "waifus",
-	WaifuItems:              "waifu_items",
 	WaifuItemWorth:          "waifu_item_worth",
+	WaifuLastClaimAmount:    "waifu_last_claim_amount",
+	WaifuExtraWorth:         "waifu_extra_worth",
 	WaifuAffinityTowards:    "waifu_affinity_towards",
+	WaifuDivorces:           "waifu_divorces",
+	WaifuAffinityChanges:    "waifu_affinity_changes",
 	FishCaugth:              "fish_caugth",
 	GamblingBoostPercentage: "gambling_boost_percentage",
 	LastInterestUpdate:      "last_interest_update",
@@ -93,9 +102,12 @@ var EconomyUserWhere = struct {
 	LastFishing             whereHelpertime_Time
 	WaifudBy                whereHelperint64
 	Waifus                  whereHelpertypes_Int64Array
-	WaifuItems              whereHelpertypes_Int64Array
 	WaifuItemWorth          whereHelperint64
+	WaifuLastClaimAmount    whereHelperint64
+	WaifuExtraWorth         whereHelperint64
 	WaifuAffinityTowards    whereHelperint64
+	WaifuDivorces           whereHelperint
+	WaifuAffinityChanges    whereHelperint
 	FishCaugth              whereHelperint64
 	GamblingBoostPercentage whereHelperint
 	LastInterestUpdate      whereHelpertime_Time
@@ -110,9 +122,12 @@ var EconomyUserWhere = struct {
 	LastFishing:             whereHelpertime_Time{field: `last_fishing`},
 	WaifudBy:                whereHelperint64{field: `waifud_by`},
 	Waifus:                  whereHelpertypes_Int64Array{field: `waifus`},
-	WaifuItems:              whereHelpertypes_Int64Array{field: `waifu_items`},
 	WaifuItemWorth:          whereHelperint64{field: `waifu_item_worth`},
+	WaifuLastClaimAmount:    whereHelperint64{field: `waifu_last_claim_amount`},
+	WaifuExtraWorth:         whereHelperint64{field: `waifu_extra_worth`},
 	WaifuAffinityTowards:    whereHelperint64{field: `waifu_affinity_towards`},
+	WaifuDivorces:           whereHelperint{field: `waifu_divorces`},
+	WaifuAffinityChanges:    whereHelperint{field: `waifu_affinity_changes`},
 	FishCaugth:              whereHelperint64{field: `fish_caugth`},
 	GamblingBoostPercentage: whereHelperint{field: `gambling_boost_percentage`},
 	LastInterestUpdate:      whereHelpertime_Time{field: `last_interest_update`},
@@ -136,8 +151,8 @@ func (*economyUserR) NewStruct() *economyUserR {
 type economyUserL struct{}
 
 var (
-	economyUserColumns               = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_items", "waifu_item_worth", "waifu_affinity_towards", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt"}
-	economyUserColumnsWithoutDefault = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_items", "waifu_item_worth", "waifu_affinity_towards", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt"}
+	economyUserColumns               = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_item_worth", "waifu_last_claim_amount", "waifu_extra_worth", "waifu_affinity_towards", "waifu_divorces", "waifu_affinity_changes", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt"}
+	economyUserColumnsWithoutDefault = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_item_worth", "waifu_last_claim_amount", "waifu_extra_worth", "waifu_affinity_towards", "waifu_divorces", "waifu_affinity_changes", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt"}
 	economyUserColumnsWithDefault    = []string{}
 	economyUserPrimaryKeyColumns     = []string{"guild_id", "user_id"}
 )

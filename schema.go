@@ -51,10 +51,13 @@ CREATE TABLE IF NOT EXISTS economy_users (
 	waifus BIGINT[],
 
 	-- the items and item worth this user has been gifted
-	waifu_items BIGINT[],
 	waifu_item_worth BIGINT NOT NULL,
+	waifu_last_claim_amount BIGINT NOT NULL,
+	waifu_extra_worth BIGINT NOT NULL,
 
 	waifu_affinity_towards BIGINT NOT NULL,
+	waifu_divorces INT NOT NULL,
+	waifu_affinity_changes INT NOT NULL,
 
 	fish_caugth BIGINT NOT NULL,
 
@@ -135,5 +138,19 @@ CREATE TABLE IF NOT EXISTS economy_pick_images (
 	guild_id BIGINT PRIMARY KEY,
 	image BYTEA NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS economy_users_waifu_items (
+	guild_id BIGINT NOT NULL,
+	user_id BIGINT NOT NULL,
+	item_id BIGINT NOT NULL,
+
+	quantity INT NOT NULL,
+
+	FOREIGN KEY (guild_id, user_id) REFERENCES economy_users (guild_id, user_id) ON DELETE CASCADE,
+	FOREIGN KEY (guild_id, item_id) REFERENCES economy_waifu_items (guild_id, local_id) ON DELETE CASCADE,
+
+	PRIMARY KEY(guild_id, user_id, item_id)
+);
+
 
 `

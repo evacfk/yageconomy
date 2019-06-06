@@ -51,6 +51,7 @@ func (p *Plugin) AddCommands() {
 
 	// commands.AddRootCommands(cmds...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, CoreCommands...)
+	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, CoreAdminCommands...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, GameCommands...)
 
 	waifuContainer := commands.CommandSystem.Root.Sub("waifu", "wf")
@@ -444,7 +445,7 @@ func (ca *AmountArg) Parse(def *dcmd.ArgDef, part string, data *dcmd.Data) (inte
 		numberStr := strings.TrimSuffix(part, "%")
 		numberStr = strings.TrimPrefix(numberStr, "%")
 
-		parsed, err := strconv.ParseFloat(part, 64)
+		parsed, err := strconv.ParseFloat(numberStr, 64)
 		if err != nil {
 			return nil, err
 		}

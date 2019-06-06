@@ -50,7 +50,7 @@ var ShopCommands = []*commands.YAGCommand{
 				embed := SimpleEmbedResponse(u, "")
 				embed.Title = "Server Shop!"
 
-				for _, v := range items {
+				for i, v := range items {
 					name := v.Name
 					if v.RoleID != 0 {
 						r := parsed.GS.RoleCopy(true, v.RoleID)
@@ -74,7 +74,7 @@ var ShopCommands = []*commands.YAGCommand{
 					}
 
 					embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-						Name:   fmt.Sprintf("#%d - %s", v.LocalID, name),
+						Name:   fmt.Sprintf("#%d - %s", i+offset+1, name),
 						Value:  fmt.Sprintf("%s - %s%d%s", typStr, conf.CurrencySymbol, v.Cost, canAffordStr),
 						Inline: true,
 					})
@@ -102,13 +102,12 @@ var ShopCommands = []*commands.YAGCommand{
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
 
-			shopItem, err := models.FindEconomyShopItemG(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int64())
+			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int(), nil)
 			if err != nil {
-				if errors.Cause(err) == sql.ErrNoRows {
-					return ErrorEmbed(u, "No shop item with that ID"), nil
-				}
-
 				return nil, err
+			}
+			if shopItem == nil {
+				return ErrorEmbed(parsed.Msg.Author, "No shop item with that ID"), nil
 			}
 
 			if shopItem.Cost > account.MoneyWallet {
@@ -253,7 +252,7 @@ var ShopAdminCommands = []*commands.YAGCommand{
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(u, "Added **%s** to the shop, it was given the ID **%d**", name, lID), nil
+			return SimpleEmbedResponse(u, "Added **%s** to the shop.", name), nil
 		},
 	},
 	&commands.YAGCommand{
@@ -268,13 +267,12 @@ var ShopAdminCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			u := parsed.Msg.Author
 
-			shopItem, err := models.FindEconomyShopItemG(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int64())
+			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int(), nil)
 			if err != nil {
-				if errors.Cause(err) == sql.ErrNoRows {
-					return ErrorEmbed(u, "No shop item with that ID"), nil
-				}
-
 				return nil, err
+			}
+			if shopItem == nil {
+				return ErrorEmbed(parsed.Msg.Author, "No shop item with that ID"), nil
 			}
 
 			if shopItem.Type != 1 {
@@ -311,14 +309,16 @@ var ShopAdminCommands = []*commands.YAGCommand{
 			&dcmd.ArgDef{Name: "ID", Type: dcmd.Int},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			shopItem, err := models.FindEconomyShopItemG(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int64())
-			if err != nil {
-				if errors.Cause(err) == sql.ErrNoRows {
-					return ErrorEmbed(parsed.Msg.Author, "No shop item with that ID"), nil
-				}
 
+			// shopItem, err := models.FindEconomyShopItemG(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int64())
+			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int(), nil)
+			if err != nil {
 				return nil, err
 			}
+			if shopItem == nil {
+				return ErrorEmbed(parsed.Msg.Author, "No shop item with that ID"), nil
+			}
+
 			_, err = shopItem.DeleteG(parsed.Context())
 			if err != nil {
 				return nil, err
@@ -327,4 +327,21 @@ var ShopAdminCommands = []*commands.YAGCommand{
 			return SimpleEmbedResponse(parsed.Msg.Author, "Deleted **%s** from the server shop", shopItem.Name), nil
 		},
 	},
+}
+
+func FindServerShopItemByOrderIndex(ctx context.Context, guildID int64, orderIndex int, items []*models.EconomyShopItem) (item *models.EconomyShopItem, err error) {
+	if items == nil {
+		items, err = models.EconomyShopItems(models.EconomyShopItemWhere.GuildID.EQ(guildID), qm.OrderBy("local_id asc")).AllG(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	orderIndex -= 1
+
+	if len(items) <= orderIndex || orderIndex < 0 {
+		return nil, nil
+	}
+
+	return items[orderIndex], nil
 }
