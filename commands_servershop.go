@@ -70,7 +70,7 @@ var ShopCommands = []*commands.YAGCommand{
 					if v.Type == ItemTypeList {
 						typStr = "list"
 					} else if v.Type == ItemTypeGamblingBoost {
-						typStr = "gambling boost"
+						typStr = fmt.Sprintf("+%d%% Gambling", v.GamblingBoostPercentage)
 					}
 
 					embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{

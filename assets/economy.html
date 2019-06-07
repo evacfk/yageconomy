@@ -65,6 +65,19 @@
                                 <label>Auto chance per message (%)</label>
                                 <input type="number" name="AutoPlantChance" class="form-control" value="{{call .fmtDecimalPercentage .PluginSettings.AutoPlantChance.Big}}" step="0.01" min="0" max="100">
                             </div>
+
+                            <hr>
+                            
+                            <div class="form-group">
+                                <label>Failed heist gambling lockdown (minutes)</label>
+                                <input type="number" name="HeistFailedGamblingBanDuration" class="form-control" value="{{.PluginSettings.HeistFailedGamblingBanDuration}}">
+                            </div>
+                            <div class="form-group">
+                                <label>Heist server wide cooldown (minutes)</label>
+                                <input type="number" name="HeistServerCooldown" class="form-control" value="{{.PluginSettings.HeistServerCooldown}}">
+                            </div>
+
+                            <hr>
                         </div>
                         <div class="col">
                             <div class="form-group">

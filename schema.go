@@ -33,6 +33,10 @@ CREATE TABLE IF NOT EXISTS economy_configs (
 	rob_cooldown INT NOT NULL
 );
 
+ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_server_cooldown INT NOT NULL DEFAULT 0;
+ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_failed_gambling_ban_duration INT NOT NULL DEFAULT 0;
+ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_last_usage TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now() - interval '10 days';
+
 CREATE TABLE IF NOT EXISTS economy_users (
 	guild_id BIGINT NOT NULL,
 	user_id BIGINT NOT NULL,
@@ -69,6 +73,8 @@ CREATE TABLE IF NOT EXISTS economy_users (
 	PRIMARY KEY(guild_id, user_id)
 );
 
+ALTER TABLE economy_users ADD COLUMN IF NOT EXISTS last_failed_heist TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now() - interval '10 days';
+
 CREATE TABLE IF NOT EXISTS economy_waifu_items (
 	guild_id BIGINT NOT NULL,
 	local_id BIGINT NOT NULL,
@@ -79,6 +85,8 @@ CREATE TABLE IF NOT EXISTS economy_waifu_items (
 
 	PRIMARY KEY(guild_id, local_id)
 );
+
+ALTER TABLE economy_waifu_items ADD COLUMN IF NOT EXISTS gambling_boost INT NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS economy_logs (
 	id BIGSERIAL PRIMARY KEY,

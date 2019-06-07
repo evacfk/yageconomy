@@ -573,8 +573,8 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 				}
 
 				// increase their worth
-				_, err = tx.Exec("UPDATE economy_users SET waifu_item_worth = waifu_item_worth + $3 WHERE guild_id = $1 AND user_id = $2",
-					parsed.GS.ID, target.ID, worthIncrease)
+				_, err = tx.Exec("UPDATE economy_users SET waifu_item_worth = waifu_item_worth + $3, gambling_boost_percentage=gambling_boost_percentage+$4 WHERE guild_id = $1 AND user_id = $2",
+					parsed.GS.ID, target.ID, worthIncrease, itemToBuy.GamblingBoost)
 				return err
 			})
 
@@ -600,6 +600,9 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 			&dcmd.ArgDef{Name: "Icon", Type: dcmd.String},
 			&dcmd.ArgDef{Name: "Name", Type: dcmd.String},
 		},
+		ArgSwitches: []*dcmd.ArgDef{
+			&dcmd.ArgDef{Switch: "boost", Name: "Gambling boost", Type: dcmd.Int},
+		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			localID, err := common.GenLocalIncrID(parsed.GS.ID, "economy_item")
 			if err != nil {
@@ -607,11 +610,12 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 			}
 
 			m := &models.EconomyWaifuItem{
-				GuildID: parsed.GS.ID,
-				LocalID: localID,
-				Price:   parsed.Args[0].Int(),
-				Icon:    parsed.Args[1].Str(),
-				Name:    parsed.Args[2].Str(),
+				GuildID:       parsed.GS.ID,
+				LocalID:       localID,
+				Price:         parsed.Args[0].Int(),
+				Icon:          parsed.Args[1].Str(),
+				Name:          parsed.Args[2].Str(),
+				GamblingBoost: parsed.Switch("boost").Int(),
 			}
 
 			err = m.InsertG(parsed.Context(), boil.Infer())
@@ -619,9 +623,14 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 				return nil, err
 			}
 
+			extraStr := ""
+			if m.GamblingBoost > 0 {
+				extraStr = fmt.Sprintf(" with a gambling profit boost of +%d%%", m.GamblingBoost)
+			}
+
 			conf := CtxConfig(parsed.Context())
-			return SimpleEmbedResponse(parsed.Msg.Author, "Added **%s** to the shop at the price of **%s%d**",
-				m.Name, conf.CurrencySymbol, m.Price), nil
+			return SimpleEmbedResponse(parsed.Msg.Author, "Added **%s** to the shop at the price of **%s%d**%s",
+				m.Name, conf.CurrencySymbol, m.Price, extraStr), nil
 		},
 	}
 	WaifuShopEdit = &commands.YAGCommand{
@@ -751,8 +760,8 @@ func ListWaifuItems(guildID, channelID int64, u *discordgo.User, currentMoney in
 
 		for _, v := range items {
 			extraVal := ""
-			if int64(v.Price) > currentMoney {
-				extraVal = " *(you can't afford)*"
+			if v.GamblingBoost > 0 {
+				extraVal = fmt.Sprintf(" (+%d%% Gambling)", v.GamblingBoost)
 			}
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   fmt.Sprintf("%s %s", v.Icon, v.Name),

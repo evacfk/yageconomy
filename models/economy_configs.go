@@ -24,76 +24,85 @@ import (
 
 // EconomyConfig is an object representing the database table.
 type EconomyConfig struct {
-	GuildID             int64            `boil:"guild_id" json:"guild_id" toml:"guild_id" yaml:"guild_id"`
-	Enabled             bool             `boil:"enabled" json:"enabled" toml:"enabled" yaml:"enabled"`
-	Admins              types.Int64Array `boil:"admins" json:"admins,omitempty" toml:"admins" yaml:"admins,omitempty"`
-	CurrencyName        string           `boil:"currency_name" json:"currency_name" toml:"currency_name" yaml:"currency_name"`
-	CurrencyNamePlural  string           `boil:"currency_name_plural" json:"currency_name_plural" toml:"currency_name_plural" yaml:"currency_name_plural"`
-	CurrencySymbol      string           `boil:"currency_symbol" json:"currency_symbol" toml:"currency_symbol" yaml:"currency_symbol"`
-	DailyFrequency      int64            `boil:"daily_frequency" json:"daily_frequency" toml:"daily_frequency" yaml:"daily_frequency"`
-	DailyAmount         int64            `boil:"daily_amount" json:"daily_amount" toml:"daily_amount" yaml:"daily_amount"`
-	ChatmoneyFrequency  int64            `boil:"chatmoney_frequency" json:"chatmoney_frequency" toml:"chatmoney_frequency" yaml:"chatmoney_frequency"`
-	ChatmoneyAmountMin  int64            `boil:"chatmoney_amount_min" json:"chatmoney_amount_min" toml:"chatmoney_amount_min" yaml:"chatmoney_amount_min"`
-	ChatmoneyAmountMax  int64            `boil:"chatmoney_amount_max" json:"chatmoney_amount_max" toml:"chatmoney_amount_max" yaml:"chatmoney_amount_max"`
-	AutoPlantChannels   types.Int64Array `boil:"auto_plant_channels" json:"auto_plant_channels,omitempty" toml:"auto_plant_channels" yaml:"auto_plant_channels,omitempty"`
-	AutoPlantMin        int64            `boil:"auto_plant_min" json:"auto_plant_min" toml:"auto_plant_min" yaml:"auto_plant_min"`
-	AutoPlantMax        int64            `boil:"auto_plant_max" json:"auto_plant_max" toml:"auto_plant_max" yaml:"auto_plant_max"`
-	AutoPlantChance     types.Decimal    `boil:"auto_plant_chance" json:"auto_plant_chance" toml:"auto_plant_chance" yaml:"auto_plant_chance"`
-	StartBalance        int64            `boil:"start_balance" json:"start_balance" toml:"start_balance" yaml:"start_balance"`
-	FishingMaxWinAmount int64            `boil:"fishing_max_win_amount" json:"fishing_max_win_amount" toml:"fishing_max_win_amount" yaml:"fishing_max_win_amount"`
-	FishingMinWinAmount int64            `boil:"fishing_min_win_amount" json:"fishing_min_win_amount" toml:"fishing_min_win_amount" yaml:"fishing_min_win_amount"`
-	FishingCooldown     int              `boil:"fishing_cooldown" json:"fishing_cooldown" toml:"fishing_cooldown" yaml:"fishing_cooldown"`
-	RobFine             int              `boil:"rob_fine" json:"rob_fine" toml:"rob_fine" yaml:"rob_fine"`
-	RobCooldown         int              `boil:"rob_cooldown" json:"rob_cooldown" toml:"rob_cooldown" yaml:"rob_cooldown"`
+	GuildID                        int64            `boil:"guild_id" json:"guild_id" toml:"guild_id" yaml:"guild_id"`
+	Enabled                        bool             `boil:"enabled" json:"enabled" toml:"enabled" yaml:"enabled"`
+	Admins                         types.Int64Array `boil:"admins" json:"admins,omitempty" toml:"admins" yaml:"admins,omitempty"`
+	CurrencyName                   string           `boil:"currency_name" json:"currency_name" toml:"currency_name" yaml:"currency_name"`
+	CurrencyNamePlural             string           `boil:"currency_name_plural" json:"currency_name_plural" toml:"currency_name_plural" yaml:"currency_name_plural"`
+	CurrencySymbol                 string           `boil:"currency_symbol" json:"currency_symbol" toml:"currency_symbol" yaml:"currency_symbol"`
+	DailyFrequency                 int64            `boil:"daily_frequency" json:"daily_frequency" toml:"daily_frequency" yaml:"daily_frequency"`
+	DailyAmount                    int64            `boil:"daily_amount" json:"daily_amount" toml:"daily_amount" yaml:"daily_amount"`
+	ChatmoneyFrequency             int64            `boil:"chatmoney_frequency" json:"chatmoney_frequency" toml:"chatmoney_frequency" yaml:"chatmoney_frequency"`
+	ChatmoneyAmountMin             int64            `boil:"chatmoney_amount_min" json:"chatmoney_amount_min" toml:"chatmoney_amount_min" yaml:"chatmoney_amount_min"`
+	ChatmoneyAmountMax             int64            `boil:"chatmoney_amount_max" json:"chatmoney_amount_max" toml:"chatmoney_amount_max" yaml:"chatmoney_amount_max"`
+	AutoPlantChannels              types.Int64Array `boil:"auto_plant_channels" json:"auto_plant_channels,omitempty" toml:"auto_plant_channels" yaml:"auto_plant_channels,omitempty"`
+	AutoPlantMin                   int64            `boil:"auto_plant_min" json:"auto_plant_min" toml:"auto_plant_min" yaml:"auto_plant_min"`
+	AutoPlantMax                   int64            `boil:"auto_plant_max" json:"auto_plant_max" toml:"auto_plant_max" yaml:"auto_plant_max"`
+	AutoPlantChance                types.Decimal    `boil:"auto_plant_chance" json:"auto_plant_chance" toml:"auto_plant_chance" yaml:"auto_plant_chance"`
+	StartBalance                   int64            `boil:"start_balance" json:"start_balance" toml:"start_balance" yaml:"start_balance"`
+	FishingMaxWinAmount            int64            `boil:"fishing_max_win_amount" json:"fishing_max_win_amount" toml:"fishing_max_win_amount" yaml:"fishing_max_win_amount"`
+	FishingMinWinAmount            int64            `boil:"fishing_min_win_amount" json:"fishing_min_win_amount" toml:"fishing_min_win_amount" yaml:"fishing_min_win_amount"`
+	FishingCooldown                int              `boil:"fishing_cooldown" json:"fishing_cooldown" toml:"fishing_cooldown" yaml:"fishing_cooldown"`
+	RobFine                        int              `boil:"rob_fine" json:"rob_fine" toml:"rob_fine" yaml:"rob_fine"`
+	RobCooldown                    int              `boil:"rob_cooldown" json:"rob_cooldown" toml:"rob_cooldown" yaml:"rob_cooldown"`
+	HeistServerCooldown            int              `boil:"heist_server_cooldown" json:"heist_server_cooldown" toml:"heist_server_cooldown" yaml:"heist_server_cooldown"`
+	HeistFailedGamblingBanDuration int              `boil:"heist_failed_gambling_ban_duration" json:"heist_failed_gambling_ban_duration" toml:"heist_failed_gambling_ban_duration" yaml:"heist_failed_gambling_ban_duration"`
+	HeistLastUsage                 time.Time        `boil:"heist_last_usage" json:"heist_last_usage" toml:"heist_last_usage" yaml:"heist_last_usage"`
 
 	R *economyConfigR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L economyConfigL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var EconomyConfigColumns = struct {
-	GuildID             string
-	Enabled             string
-	Admins              string
-	CurrencyName        string
-	CurrencyNamePlural  string
-	CurrencySymbol      string
-	DailyFrequency      string
-	DailyAmount         string
-	ChatmoneyFrequency  string
-	ChatmoneyAmountMin  string
-	ChatmoneyAmountMax  string
-	AutoPlantChannels   string
-	AutoPlantMin        string
-	AutoPlantMax        string
-	AutoPlantChance     string
-	StartBalance        string
-	FishingMaxWinAmount string
-	FishingMinWinAmount string
-	FishingCooldown     string
-	RobFine             string
-	RobCooldown         string
+	GuildID                        string
+	Enabled                        string
+	Admins                         string
+	CurrencyName                   string
+	CurrencyNamePlural             string
+	CurrencySymbol                 string
+	DailyFrequency                 string
+	DailyAmount                    string
+	ChatmoneyFrequency             string
+	ChatmoneyAmountMin             string
+	ChatmoneyAmountMax             string
+	AutoPlantChannels              string
+	AutoPlantMin                   string
+	AutoPlantMax                   string
+	AutoPlantChance                string
+	StartBalance                   string
+	FishingMaxWinAmount            string
+	FishingMinWinAmount            string
+	FishingCooldown                string
+	RobFine                        string
+	RobCooldown                    string
+	HeistServerCooldown            string
+	HeistFailedGamblingBanDuration string
+	HeistLastUsage                 string
 }{
-	GuildID:             "guild_id",
-	Enabled:             "enabled",
-	Admins:              "admins",
-	CurrencyName:        "currency_name",
-	CurrencyNamePlural:  "currency_name_plural",
-	CurrencySymbol:      "currency_symbol",
-	DailyFrequency:      "daily_frequency",
-	DailyAmount:         "daily_amount",
-	ChatmoneyFrequency:  "chatmoney_frequency",
-	ChatmoneyAmountMin:  "chatmoney_amount_min",
-	ChatmoneyAmountMax:  "chatmoney_amount_max",
-	AutoPlantChannels:   "auto_plant_channels",
-	AutoPlantMin:        "auto_plant_min",
-	AutoPlantMax:        "auto_plant_max",
-	AutoPlantChance:     "auto_plant_chance",
-	StartBalance:        "start_balance",
-	FishingMaxWinAmount: "fishing_max_win_amount",
-	FishingMinWinAmount: "fishing_min_win_amount",
-	FishingCooldown:     "fishing_cooldown",
-	RobFine:             "rob_fine",
-	RobCooldown:         "rob_cooldown",
+	GuildID:                        "guild_id",
+	Enabled:                        "enabled",
+	Admins:                         "admins",
+	CurrencyName:                   "currency_name",
+	CurrencyNamePlural:             "currency_name_plural",
+	CurrencySymbol:                 "currency_symbol",
+	DailyFrequency:                 "daily_frequency",
+	DailyAmount:                    "daily_amount",
+	ChatmoneyFrequency:             "chatmoney_frequency",
+	ChatmoneyAmountMin:             "chatmoney_amount_min",
+	ChatmoneyAmountMax:             "chatmoney_amount_max",
+	AutoPlantChannels:              "auto_plant_channels",
+	AutoPlantMin:                   "auto_plant_min",
+	AutoPlantMax:                   "auto_plant_max",
+	AutoPlantChance:                "auto_plant_chance",
+	StartBalance:                   "start_balance",
+	FishingMaxWinAmount:            "fishing_max_win_amount",
+	FishingMinWinAmount:            "fishing_min_win_amount",
+	FishingCooldown:                "fishing_cooldown",
+	RobFine:                        "rob_fine",
+	RobCooldown:                    "rob_cooldown",
+	HeistServerCooldown:            "heist_server_cooldown",
+	HeistFailedGamblingBanDuration: "heist_failed_gambling_ban_duration",
+	HeistLastUsage:                 "heist_last_usage",
 }
 
 // Generated where
@@ -178,50 +187,77 @@ func (w whereHelperint) LTE(x int) qm.QueryMod { return qmhelper.Where(w.field, 
 func (w whereHelperint) GT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
 func (w whereHelperint) GTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
+type whereHelpertime_Time struct{ field string }
+
+func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.EQ, x)
+}
+func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.NEQ, x)
+}
+func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 var EconomyConfigWhere = struct {
-	GuildID             whereHelperint64
-	Enabled             whereHelperbool
-	Admins              whereHelpertypes_Int64Array
-	CurrencyName        whereHelperstring
-	CurrencyNamePlural  whereHelperstring
-	CurrencySymbol      whereHelperstring
-	DailyFrequency      whereHelperint64
-	DailyAmount         whereHelperint64
-	ChatmoneyFrequency  whereHelperint64
-	ChatmoneyAmountMin  whereHelperint64
-	ChatmoneyAmountMax  whereHelperint64
-	AutoPlantChannels   whereHelpertypes_Int64Array
-	AutoPlantMin        whereHelperint64
-	AutoPlantMax        whereHelperint64
-	AutoPlantChance     whereHelpertypes_Decimal
-	StartBalance        whereHelperint64
-	FishingMaxWinAmount whereHelperint64
-	FishingMinWinAmount whereHelperint64
-	FishingCooldown     whereHelperint
-	RobFine             whereHelperint
-	RobCooldown         whereHelperint
+	GuildID                        whereHelperint64
+	Enabled                        whereHelperbool
+	Admins                         whereHelpertypes_Int64Array
+	CurrencyName                   whereHelperstring
+	CurrencyNamePlural             whereHelperstring
+	CurrencySymbol                 whereHelperstring
+	DailyFrequency                 whereHelperint64
+	DailyAmount                    whereHelperint64
+	ChatmoneyFrequency             whereHelperint64
+	ChatmoneyAmountMin             whereHelperint64
+	ChatmoneyAmountMax             whereHelperint64
+	AutoPlantChannels              whereHelpertypes_Int64Array
+	AutoPlantMin                   whereHelperint64
+	AutoPlantMax                   whereHelperint64
+	AutoPlantChance                whereHelpertypes_Decimal
+	StartBalance                   whereHelperint64
+	FishingMaxWinAmount            whereHelperint64
+	FishingMinWinAmount            whereHelperint64
+	FishingCooldown                whereHelperint
+	RobFine                        whereHelperint
+	RobCooldown                    whereHelperint
+	HeistServerCooldown            whereHelperint
+	HeistFailedGamblingBanDuration whereHelperint
+	HeistLastUsage                 whereHelpertime_Time
 }{
-	GuildID:             whereHelperint64{field: `guild_id`},
-	Enabled:             whereHelperbool{field: `enabled`},
-	Admins:              whereHelpertypes_Int64Array{field: `admins`},
-	CurrencyName:        whereHelperstring{field: `currency_name`},
-	CurrencyNamePlural:  whereHelperstring{field: `currency_name_plural`},
-	CurrencySymbol:      whereHelperstring{field: `currency_symbol`},
-	DailyFrequency:      whereHelperint64{field: `daily_frequency`},
-	DailyAmount:         whereHelperint64{field: `daily_amount`},
-	ChatmoneyFrequency:  whereHelperint64{field: `chatmoney_frequency`},
-	ChatmoneyAmountMin:  whereHelperint64{field: `chatmoney_amount_min`},
-	ChatmoneyAmountMax:  whereHelperint64{field: `chatmoney_amount_max`},
-	AutoPlantChannels:   whereHelpertypes_Int64Array{field: `auto_plant_channels`},
-	AutoPlantMin:        whereHelperint64{field: `auto_plant_min`},
-	AutoPlantMax:        whereHelperint64{field: `auto_plant_max`},
-	AutoPlantChance:     whereHelpertypes_Decimal{field: `auto_plant_chance`},
-	StartBalance:        whereHelperint64{field: `start_balance`},
-	FishingMaxWinAmount: whereHelperint64{field: `fishing_max_win_amount`},
-	FishingMinWinAmount: whereHelperint64{field: `fishing_min_win_amount`},
-	FishingCooldown:     whereHelperint{field: `fishing_cooldown`},
-	RobFine:             whereHelperint{field: `rob_fine`},
-	RobCooldown:         whereHelperint{field: `rob_cooldown`},
+	GuildID:                        whereHelperint64{field: `guild_id`},
+	Enabled:                        whereHelperbool{field: `enabled`},
+	Admins:                         whereHelpertypes_Int64Array{field: `admins`},
+	CurrencyName:                   whereHelperstring{field: `currency_name`},
+	CurrencyNamePlural:             whereHelperstring{field: `currency_name_plural`},
+	CurrencySymbol:                 whereHelperstring{field: `currency_symbol`},
+	DailyFrequency:                 whereHelperint64{field: `daily_frequency`},
+	DailyAmount:                    whereHelperint64{field: `daily_amount`},
+	ChatmoneyFrequency:             whereHelperint64{field: `chatmoney_frequency`},
+	ChatmoneyAmountMin:             whereHelperint64{field: `chatmoney_amount_min`},
+	ChatmoneyAmountMax:             whereHelperint64{field: `chatmoney_amount_max`},
+	AutoPlantChannels:              whereHelpertypes_Int64Array{field: `auto_plant_channels`},
+	AutoPlantMin:                   whereHelperint64{field: `auto_plant_min`},
+	AutoPlantMax:                   whereHelperint64{field: `auto_plant_max`},
+	AutoPlantChance:                whereHelpertypes_Decimal{field: `auto_plant_chance`},
+	StartBalance:                   whereHelperint64{field: `start_balance`},
+	FishingMaxWinAmount:            whereHelperint64{field: `fishing_max_win_amount`},
+	FishingMinWinAmount:            whereHelperint64{field: `fishing_min_win_amount`},
+	FishingCooldown:                whereHelperint{field: `fishing_cooldown`},
+	RobFine:                        whereHelperint{field: `rob_fine`},
+	RobCooldown:                    whereHelperint{field: `rob_cooldown`},
+	HeistServerCooldown:            whereHelperint{field: `heist_server_cooldown`},
+	HeistFailedGamblingBanDuration: whereHelperint{field: `heist_failed_gambling_ban_duration`},
+	HeistLastUsage:                 whereHelpertime_Time{field: `heist_last_usage`},
 }
 
 // EconomyConfigRels is where relationship names are stored.
@@ -241,9 +277,9 @@ func (*economyConfigR) NewStruct() *economyConfigR {
 type economyConfigL struct{}
 
 var (
-	economyConfigColumns               = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown"}
+	economyConfigColumns               = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown", "heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage"}
 	economyConfigColumnsWithoutDefault = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown"}
-	economyConfigColumnsWithDefault    = []string{}
+	economyConfigColumnsWithDefault    = []string{"heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage"}
 	economyConfigPrimaryKeyColumns     = []string{"guild_id"}
 )
 

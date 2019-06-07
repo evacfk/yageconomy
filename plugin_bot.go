@@ -52,7 +52,7 @@ func (p *Plugin) AddCommands() {
 	// commands.AddRootCommands(cmds...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, CoreCommands...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, CoreAdminCommands...)
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, GameCommands...)
+	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, gamblingCmdMiddleware}, GameCommands...)
 
 	waifuContainer := commands.CommandSystem.Root.Sub("waifu", "wf")
 	waifuContainer.NotFound = commands.CommonContainerNotFoundHandler(waifuContainer, "")
@@ -71,7 +71,7 @@ func (p *Plugin) AddCommands() {
 
 func (p *Plugin) BotInit() {
 	eventsystem.AddHandlerAsyncLast(handleMessageCreate, eventsystem.EventMessageCreate)
-
+	eventsystem.AddHandlerAsyncLast(handleReactionAddRemove, eventsystem.EventMessageReactionAdd, eventsystem.EventMessageReactionRemove)
 }
 
 func economyCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {

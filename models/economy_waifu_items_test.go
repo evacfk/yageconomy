@@ -427,7 +427,7 @@ func testEconomyWaifuItemsSelect(t *testing.T) {
 }
 
 var (
-	economyWaifuItemDBTypes = map[string]string{`GuildID`: `bigint`, `LocalID`: `bigint`, `Name`: `text`, `Icon`: `text`, `Price`: `integer`}
+	economyWaifuItemDBTypes = map[string]string{`GuildID`: `bigint`, `LocalID`: `bigint`, `Name`: `text`, `Icon`: `text`, `Price`: `integer`, `GamblingBoost`: `integer`}
 	_                       = bytes.MinRead
 )
 

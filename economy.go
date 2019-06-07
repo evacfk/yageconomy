@@ -3,6 +3,8 @@ package yageconomy
 //go:generate sqlboiler --no-hooks psql
 
 import (
+	"context"
+	"database/sql"
 	"github.com/ericlagergren/decimal"
 	"github.com/jonas747/yageconomy/models"
 	"github.com/jonas747/yagpdb/common"
@@ -58,5 +60,21 @@ func DefaultConfig(g int64) *models.EconomyConfig {
 
 		RobFine:     25,
 		RobCooldown: 600,
+
+		HeistServerCooldown:            1,
+		HeistFailedGamblingBanDuration: 60,
 	}
+}
+
+func GuildConfigOrDefault(ctx context.Context, guildID int64) (*models.EconomyConfig, error) {
+	conf, err := models.FindEconomyConfigG(ctx, guildID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return DefaultConfig(guildID), nil
+		}
+
+		return nil, err
+	}
+
+	return conf, nil
 }
