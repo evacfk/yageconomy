@@ -222,7 +222,7 @@ var (
 			claimAmount := cost
 			if parsed.Args[1].Value != nil {
 
-				claimAmount = parsed.Args[0].Value.(*AmountArgResult).Apply(account.MoneyWallet)
+				claimAmount = parsed.Args[1].Value.(*AmountArgResult).Apply(account.MoneyWallet)
 				if claimAmount < cost {
 					return ErrorEmbed(u, "That waifu costs more than **%s%d** that to claim (%s%d)", conf.CurrencySymbol, claimAmount, conf.CurrencySymbol, cost), nil
 				}
