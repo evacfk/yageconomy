@@ -15,53 +15,58 @@ import (
 	"image"
 	"io"
 	"net/http"
+	"time"
 )
 
 type PostConfigForm struct {
-	Enabled             bool
-	Admins              []int64 `valid:"role,true"`
-	CurrencyName        string  `valid:",1,50"`
-	CurrencyNamePlural  string  `valid:",1,50"`
-	CurrencySymbol      string  `valid:",1,50"`
-	DailyFrequency      int64
-	DailyAmount         int64
-	ChatmoneyFrequency  int64
-	ChatmoneyAmountMin  int64
-	ChatmoneyAmountMax  int64
-	StartBalance        int64
-	AutoPlantChannels   []int64 `valid:"channel,true"`
-	AutoPlantMin        int64
-	AutoPlantMax        int64
-	AutoPlantChance     float64
-	RobFine             int
-	RobCooldown         int
-	FishingCooldown     int
-	FishingMaxwinAmount int64
-	FishingMinWinAmount int64
+	Enabled                        bool
+	Admins                         []int64 `valid:"role,true"`
+	CurrencyName                   string  `valid:",1,50"`
+	CurrencyNamePlural             string  `valid:",1,50"`
+	CurrencySymbol                 string  `valid:",1,50"`
+	DailyFrequency                 int64
+	DailyAmount                    int64
+	ChatmoneyFrequency             int64
+	ChatmoneyAmountMin             int64
+	ChatmoneyAmountMax             int64
+	StartBalance                   int64
+	AutoPlantChannels              []int64 `valid:"channel,true"`
+	AutoPlantMin                   int64
+	AutoPlantMax                   int64
+	AutoPlantChance                float64
+	RobFine                        int
+	RobCooldown                    int
+	FishingCooldown                int
+	FishingMaxwinAmount            int64
+	FishingMinWinAmount            int64
+	HeistServerCooldown            int
+	HeistFailedGamblingBanDuration int
 }
 
 func (p PostConfigForm) DBModel() *models.EconomyConfig {
 	return &models.EconomyConfig{
-		Enabled:             p.Enabled,
-		Admins:              p.Admins,
-		CurrencyName:        p.CurrencyName,
-		CurrencyNamePlural:  p.CurrencyNamePlural,
-		CurrencySymbol:      p.CurrencySymbol,
-		DailyFrequency:      p.DailyFrequency,
-		DailyAmount:         p.DailyAmount,
-		ChatmoneyFrequency:  p.ChatmoneyFrequency,
-		ChatmoneyAmountMin:  p.ChatmoneyAmountMin,
-		ChatmoneyAmountMax:  p.ChatmoneyAmountMax,
-		StartBalance:        p.StartBalance,
-		AutoPlantChannels:   p.AutoPlantChannels,
-		AutoPlantMin:        p.AutoPlantMin,
-		AutoPlantMax:        p.AutoPlantMax,
-		AutoPlantChance:     types.NewDecimal(decimal.New(int64(p.AutoPlantChance*100), 4)),
-		RobFine:             p.RobFine,
-		RobCooldown:         p.RobCooldown,
-		FishingCooldown:     p.FishingCooldown,
-		FishingMaxWinAmount: p.FishingMaxwinAmount,
-		FishingMinWinAmount: p.FishingMinWinAmount,
+		Enabled:                        p.Enabled,
+		Admins:                         p.Admins,
+		CurrencyName:                   p.CurrencyName,
+		CurrencyNamePlural:             p.CurrencyNamePlural,
+		CurrencySymbol:                 p.CurrencySymbol,
+		DailyFrequency:                 p.DailyFrequency,
+		DailyAmount:                    p.DailyAmount,
+		ChatmoneyFrequency:             p.ChatmoneyFrequency,
+		ChatmoneyAmountMin:             p.ChatmoneyAmountMin,
+		ChatmoneyAmountMax:             p.ChatmoneyAmountMax,
+		StartBalance:                   p.StartBalance,
+		AutoPlantChannels:              p.AutoPlantChannels,
+		AutoPlantMin:                   p.AutoPlantMin,
+		AutoPlantMax:                   p.AutoPlantMax,
+		AutoPlantChance:                types.NewDecimal(decimal.New(int64(p.AutoPlantChance*100), 4)),
+		RobFine:                        p.RobFine,
+		RobCooldown:                    p.RobCooldown,
+		FishingCooldown:                p.FishingCooldown,
+		FishingMaxWinAmount:            p.FishingMaxwinAmount,
+		FishingMinWinAmount:            p.FishingMinWinAmount,
+		HeistServerCooldown:            p.HeistServerCooldown,
+		HeistFailedGamblingBanDuration: p.HeistFailedGamblingBanDuration,
 	}
 }
 
@@ -121,11 +126,12 @@ func handlePostEconomy(w http.ResponseWriter, r *http.Request) (templateData web
 
 	form := r.Context().Value(common.ContextKeyParsedForm).(*PostConfigForm)
 	conf := form.DBModel()
+	conf.HeistLastUsage = time.Time{}
 	conf.GuildID = g.ID
 
 	templateData["PluginSettings"] = conf
 
-	err = conf.UpsertG(r.Context(), true, []string{"guild_id"}, boil.Infer(), boil.Infer())
+	err = conf.UpsertG(r.Context(), true, []string{"guild_id"}, boil.Blacklist("heist_last_usage"), boil.Infer())
 	return templateData, nil
 }
 

@@ -23,44 +23,49 @@ import (
 
 // EconomyWaifuItem is an object representing the database table.
 type EconomyWaifuItem struct {
-	GuildID int64  `boil:"guild_id" json:"guild_id" toml:"guild_id" yaml:"guild_id"`
-	LocalID int64  `boil:"local_id" json:"local_id" toml:"local_id" yaml:"local_id"`
-	Name    string `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Icon    string `boil:"icon" json:"icon" toml:"icon" yaml:"icon"`
-	Price   int    `boil:"price" json:"price" toml:"price" yaml:"price"`
+	GuildID       int64  `boil:"guild_id" json:"guild_id" toml:"guild_id" yaml:"guild_id"`
+	LocalID       int64  `boil:"local_id" json:"local_id" toml:"local_id" yaml:"local_id"`
+	Name          string `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Icon          string `boil:"icon" json:"icon" toml:"icon" yaml:"icon"`
+	Price         int    `boil:"price" json:"price" toml:"price" yaml:"price"`
+	GamblingBoost int    `boil:"gambling_boost" json:"gambling_boost" toml:"gambling_boost" yaml:"gambling_boost"`
 
 	R *economyWaifuItemR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L economyWaifuItemL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var EconomyWaifuItemColumns = struct {
-	GuildID string
-	LocalID string
-	Name    string
-	Icon    string
-	Price   string
+	GuildID       string
+	LocalID       string
+	Name          string
+	Icon          string
+	Price         string
+	GamblingBoost string
 }{
-	GuildID: "guild_id",
-	LocalID: "local_id",
-	Name:    "name",
-	Icon:    "icon",
-	Price:   "price",
+	GuildID:       "guild_id",
+	LocalID:       "local_id",
+	Name:          "name",
+	Icon:          "icon",
+	Price:         "price",
+	GamblingBoost: "gambling_boost",
 }
 
 // Generated where
 
 var EconomyWaifuItemWhere = struct {
-	GuildID whereHelperint64
-	LocalID whereHelperint64
-	Name    whereHelperstring
-	Icon    whereHelperstring
-	Price   whereHelperint
+	GuildID       whereHelperint64
+	LocalID       whereHelperint64
+	Name          whereHelperstring
+	Icon          whereHelperstring
+	Price         whereHelperint
+	GamblingBoost whereHelperint
 }{
-	GuildID: whereHelperint64{field: `guild_id`},
-	LocalID: whereHelperint64{field: `local_id`},
-	Name:    whereHelperstring{field: `name`},
-	Icon:    whereHelperstring{field: `icon`},
-	Price:   whereHelperint{field: `price`},
+	GuildID:       whereHelperint64{field: `guild_id`},
+	LocalID:       whereHelperint64{field: `local_id`},
+	Name:          whereHelperstring{field: `name`},
+	Icon:          whereHelperstring{field: `icon`},
+	Price:         whereHelperint{field: `price`},
+	GamblingBoost: whereHelperint{field: `gambling_boost`},
 }
 
 // EconomyWaifuItemRels is where relationship names are stored.
@@ -80,9 +85,9 @@ func (*economyWaifuItemR) NewStruct() *economyWaifuItemR {
 type economyWaifuItemL struct{}
 
 var (
-	economyWaifuItemColumns               = []string{"guild_id", "local_id", "name", "icon", "price"}
+	economyWaifuItemColumns               = []string{"guild_id", "local_id", "name", "icon", "price", "gambling_boost"}
 	economyWaifuItemColumnsWithoutDefault = []string{"guild_id", "local_id", "name", "icon", "price"}
-	economyWaifuItemColumnsWithDefault    = []string{}
+	economyWaifuItemColumnsWithDefault    = []string{"gambling_boost"}
 	economyWaifuItemPrimaryKeyColumns     = []string{"guild_id", "local_id"}
 )
 
