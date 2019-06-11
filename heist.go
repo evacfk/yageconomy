@@ -61,7 +61,8 @@ type HeistUser struct {
 	Injured  bool
 	Captured bool
 
-	Account *models.EconomyUser
+	Account  *models.EconomyUser
+	Winnings int64
 }
 
 var (
@@ -414,6 +415,10 @@ func (hs *HeistSession) handleReaction(evt *eventsystem.EventData) {
 		return
 	}
 
+	if account.MoneyWallet < 1 {
+		return
+	}
+
 	heistUser := &HeistUser{
 		User:    user,
 		Account: account,
@@ -510,15 +515,14 @@ func (hs *HeistSession) End() {
 		} else {
 			multiplier := 1 - float64(hs.MoneyLostPercentage)/100
 			profit = int64(multiplier * float64(profit))
+			profitsFiltered := hs.calcWinnings(profit)
 
-			perPerson := profit / int64(len(hs.Users))
-			remainder := profit % int64(len(hs.Users))
+			// perPerson := profit / int64(len(hs.Users))
+			// remainder := profit % int64(len(hs.Users))
 
-			deadPeopleLoss := int64(len(hs.deadUsers())) * perPerson
-
-			builder.WriteString(fmt.Sprintf("\n\n**Total earnings: %s%d (-%d%%)**\n\n", config.CurrencySymbol, profit-deadPeopleLoss, hs.MoneyLostPercentage))
+			builder.WriteString(fmt.Sprintf("\n\n**Total earnings: %s%d (-%d%%)**\n\n", config.CurrencySymbol, profitsFiltered, hs.MoneyLostPercentage))
 			for _, v := range hs.Users {
-				hs.finishHeistUser(config, v, builder, perPerson, remainder)
+				hs.finishHeistUser(config, v, builder)
 			}
 		}
 	}
@@ -531,7 +535,30 @@ func (hs *HeistSession) End() {
 	}
 }
 
-func (hs *HeistSession) finishHeistUser(config *models.EconomyConfig, v *HeistUser, builder *strings.Builder, perPerson int64, remainder int64) {
+func (hs *HeistSession) calcWinnings(totalWinnings int64) int64 {
+	totalContributed := int64(0)
+	for _, v := range hs.Users {
+		if v.Dead || v.Captured {
+			continue
+		}
+		totalContributed += v.Account.MoneyWallet
+	}
+
+	filteredWinnings := int64(0)
+	for _, v := range hs.Users {
+		if v.Dead || v.Captured {
+			continue
+		}
+
+		portion := (float64(v.Account.MoneyWallet) / float64(totalContributed)) * float64(totalWinnings)
+		filteredWinnings += int64(portion)
+		v.Winnings = int64(portion)
+	}
+
+	return filteredWinnings
+}
+
+func (hs *HeistSession) finishHeistUser(config *models.EconomyConfig, v *HeistUser, builder *strings.Builder) {
 	builder.WriteString("`" + v.User.Username + "`: " + config.CurrencySymbol)
 
 	win := int64(0)
@@ -540,10 +567,7 @@ func (hs *HeistSession) finishHeistUser(config *models.EconomyConfig, v *HeistUs
 	} else if v.Dead {
 		builder.WriteString("0 (dead)")
 	} else {
-		win = perPerson
-		if v.User.ID == hs.Author.ID {
-			win += remainder
-		}
+		win = v.Winnings
 
 		extraStr := ""
 		if v.Injured {
