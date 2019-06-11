@@ -33,13 +33,21 @@ var GameCommands = []*commands.YAGCommand{
 				return ErrorEmbed(u, resp), nil
 			}
 
+			guessedHeads := true
+			inLowered := strings.ToLower(parsed.Args[1].Str())
+			if inLowered == "h" || inLowered == "head" || inLowered == "heads" {
+				guessedHeads = true
+			} else if inLowered == "t" || inLowered == "tail" || inLowered == "tails" {
+				guessedHeads = false
+			} else {
+				return ErrorEmbed(u, "You can only pick between `heads` and `tails`"), nil
+			}
+
 			moneyIn := amount
 
 			if amount > account.MoneyWallet {
 				return ErrorEmbed(u, "You don't have that amount in your wallet"), nil
 			}
-
-			guessedHeads := strings.HasPrefix(strings.ToLower(parsed.Args[1].Str()), "h")
 
 			isHeads := rand.Intn(2) == 0
 
