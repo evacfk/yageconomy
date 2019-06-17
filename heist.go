@@ -88,6 +88,16 @@ func NewHeist(conf *models.EconomyConfig, guildID, channelID int64, author *disc
 		}
 	}
 
+	if locked, resp := TryLockMoneyAltering(guildID, author.ID, "You can't use any money-altering commands while in a heist."); !locked {
+		return resp, nil
+	}
+	createdHeist := false
+	defer func() {
+		if !createdHeist {
+			UnlockMoneyAltering(guildID, author.ID)
+		}
+	}()
+
 	msg, err := common.BotSession.ChannelMessageSendEmbed(channelID, SimpleEmbedResponse(author, "Setting up heist..."))
 	if err != nil {
 		return "", err
@@ -119,13 +129,20 @@ func NewHeist(conf *models.EconomyConfig, guildID, channelID int64, author *disc
 		StartsAt:  time.Now().Add(waitUntilStart),
 		CreatedAt: time.Now(),
 	}
-
+	createdHeist = true
 	activeHeists = append(activeHeists, heist)
 	go heist.Run()
 	return "", nil
 }
 
 func removeHeist(h *HeistSession) {
+
+	h.Lock()
+	for _, user := range h.Users {
+		go UnlockMoneyAltering(h.GuildID, user.User.ID)
+	}
+	h.Unlock()
+
 	activeHeistsmu.Lock()
 	defer activeHeistsmu.Unlock()
 
@@ -381,6 +398,20 @@ func (hs *HeistSession) handleReaction(evt *eventsystem.EventData) {
 		return
 	}
 
+	addedToHeist := false
+	if add {
+		if locked, resp := TryLockMoneyAltering(guildID, userID, "You can't use any money altering commands while in a heist"); !locked {
+			bot.SendDM(userID, "Unable to join heist: "+resp)
+			return
+		}
+
+		defer func() {
+			if !addedToHeist {
+				UnlockMoneyAltering(guildID, userID)
+			}
+		}()
+	}
+
 	hs.Lock()
 	defer hs.Unlock()
 
@@ -425,9 +456,15 @@ func (hs *HeistSession) handleReaction(evt *eventsystem.EventData) {
 	}
 
 	if add {
+		addedToHeist = true
 		hs.Users = addUserIfNotExists(hs.Users, heistUser)
 	} else {
-		hs.Users = removeUserFromSlice(hs.Users, heistUser)
+
+		newUsers, removed := removeUserFromSlice(hs.Users, heistUser)
+		hs.Users = newUsers
+		if removed {
+			UnlockMoneyAltering(guildID, userID)
+		}
 	}
 
 	hs.updateWaitingMessage()
@@ -443,14 +480,14 @@ func addUserIfNotExists(users []*HeistUser, target *HeistUser) []*HeistUser {
 	return append(users, target)
 }
 
-func removeUserFromSlice(users []*HeistUser, target *HeistUser) []*HeistUser {
+func removeUserFromSlice(users []*HeistUser, target *HeistUser) ([]*HeistUser, bool) {
 	for i, v := range users {
 		if v.User.ID == target.User.ID {
-			return append(users[:i], users[i+1:]...)
+			return append(users[:i], users[i+1:]...), true
 		}
 	}
 
-	return users
+	return users, false
 }
 
 func joinUsers(users []*HeistUser) string {

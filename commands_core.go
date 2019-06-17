@@ -82,6 +82,7 @@ var CoreCommands = []*commands.YAGCommand{
 		Name:         "Withdraw",
 		Description:  "Withdraws money from your bank account into your wallet",
 		RequiredArgs: 1,
+		Middlewares:  []dcmd.MiddleWareFunc{moneyAlteringMW},
 		Arguments: []*dcmd.ArgDef{
 			&dcmd.ArgDef{Name: "Amount", Type: &AmountArg{}},
 		},
@@ -109,6 +110,7 @@ var CoreCommands = []*commands.YAGCommand{
 		CmdCategory:  CategoryEconomy,
 		Name:         "Deposit",
 		Description:  "Deposits money into your bank account from your wallet",
+		Middlewares:  []dcmd.MiddleWareFunc{moneyAlteringMW},
 		RequiredArgs: 1,
 		Arguments: []*dcmd.ArgDef{
 			&dcmd.ArgDef{Name: "Amount", Type: &AmountArg{}},
@@ -137,6 +139,7 @@ var CoreCommands = []*commands.YAGCommand{
 		CmdCategory:  CategoryEconomy,
 		Name:         "Give",
 		Description:  "Give someone money from your wallet",
+		Middlewares:  []dcmd.MiddleWareFunc{moneyAlteringMW},
 		RequiredArgs: 2,
 		Arguments: []*dcmd.ArgDef{
 			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
@@ -180,6 +183,7 @@ var CoreCommands = []*commands.YAGCommand{
 	&commands.YAGCommand{
 		CmdCategory: CategoryEconomy,
 		Name:        "Daily",
+		Middlewares: []dcmd.MiddleWareFunc{moneyAlteringMW},
 		Description: "Claim your daily free cash",
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
@@ -248,15 +252,29 @@ var CoreCommands = []*commands.YAGCommand{
 					userIDs[i] = v.UserID
 				}
 
-				users := bot.GetUsersGS(parsed.GS, userIDs...)
+				members, err := bot.GetMembers(parsed.GS.ID, userIDs...)
+				// users := bot.GetUsersGS(parsed.GS, userIDs...)
 
 				for i, v := range result {
-					user := users[i]
+					user := ""
+					for _, m := range members {
+						if m.ID == v.UserID {
+							user = m.Nick
+							if user == "" {
+								user = m.Username
+							}
+							break
+						}
+					}
+
+					if user == "" {
+						user = fmt.Sprintf("user left (ID: %d)", v.UserID)
+					}
+
 					embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-						Name:  fmt.Sprintf("#%d %s", i+offset+1, user.Username),
+						Name:  fmt.Sprintf("#%d %s", i+offset+1, user),
 						Value: fmt.Sprintf("%s%d", conf.CurrencySymbol, v.MoneyBank+v.MoneyWallet),
 					})
-
 				}
 
 				return embed, nil
@@ -270,6 +288,7 @@ var CoreCommands = []*commands.YAGCommand{
 		CmdCategory:  CategoryEconomy,
 		Name:         "Plant",
 		Description:  "Plants a certain amount of currency in the channel, optionally with a password, use Pick to pick it",
+		Middlewares:  []dcmd.MiddleWareFunc{moneyAlteringMW},
 		RequiredArgs: 1,
 		Arguments: []*dcmd.ArgDef{
 			&dcmd.ArgDef{Name: "Money", Type: &AmountArg{}},
@@ -560,7 +579,7 @@ var CoreAdminCommands = []*commands.YAGCommand{
 	&commands.YAGCommand{
 		CmdCategory:  CategoryEconomy,
 		Name:         "DelUser",
-		Description:  "Takes away money from someone (admins only)",
+		Description:  "Deletes someone's economy account (admins only)",
 		RequiredArgs: 2,
 		Arguments: []*dcmd.ArgDef{
 			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},

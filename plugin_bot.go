@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var _ bot.BotInitHandler = (*Plugin)(nil)
@@ -52,7 +53,7 @@ func (p *Plugin) AddCommands() {
 	// commands.AddRootCommands(cmds...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, CoreCommands...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, CoreAdminCommands...)
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, gamblingCmdMiddleware}, GameCommands...)
+	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, gamblingCmdMiddleware, moneyAlteringMW}, GameCommands...)
 
 	waifuContainer := commands.CommandSystem.Root.Sub("waifu", "wf")
 	waifuContainer.NotFound = commands.CommonContainerNotFoundHandler(waifuContainer, "")
@@ -60,12 +61,14 @@ func (p *Plugin) AddCommands() {
 	waifuContainer.AddMidlewares(economyCmdMiddleware)
 
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware},
-		WaifuCmdTop, WaifuCmdInfo, WaifuCmdClaim, WaifuCmdReset, WaifuCmdTransfer, WaifuCmdDivorce, WaifuCmdAffinity, WaifuCmdGift)
+		WaifuCmdTop, WaifuCmdInfo, WaifuCmdAffinity)
+	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, moneyAlteringMW},
+		WaifuCmdClaim, WaifuCmdReset, WaifuCmdTransfer, WaifuCmdDivorce, WaifuCmdGift)
 
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware},
 		WaifuShopAdd, WaifuShopEdit, WaifuCmdDel)
 
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, ShopCommands...)
+	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, moneyAlteringMW}, ShopCommands...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, ShopAdminCommands...)
 }
 
@@ -499,4 +502,68 @@ func (a *AmountArgResult) ApplyWithRestrictions(total int64, currencySymbol, sou
 	}
 
 	return v, ""
+}
+
+type GamblingLockKey struct {
+	GuildID int64
+	UserID  int64
+}
+
+var (
+	moneyAlteringLocks   = make(map[GamblingLockKey]string)
+	moneyAlteringLocksmu sync.Mutex
+)
+
+func TryLockMoneyAltering(guildID, userID int64, msg string) (bool, string) {
+	moneyAlteringLocksmu.Lock()
+	defer moneyAlteringLocksmu.Unlock()
+
+	key := GamblingLockKey{
+		GuildID: guildID,
+		UserID:  userID,
+	}
+
+	if resp, ok := moneyAlteringLocks[key]; ok {
+		return false, resp
+	}
+
+	moneyAlteringLocks[key] = msg
+	return true, ""
+}
+
+func IsMoneyAlteringLocked(guildID, userID int64) (bool, string) {
+	moneyAlteringLocksmu.Lock()
+	defer moneyAlteringLocksmu.Unlock()
+
+	key := GamblingLockKey{
+		GuildID: guildID,
+		UserID:  userID,
+	}
+
+	if resp, ok := moneyAlteringLocks[key]; ok {
+		return true, resp
+	}
+	return false, ""
+}
+
+func UnlockMoneyAltering(guildID, userID int64) {
+	moneyAlteringLocksmu.Lock()
+	defer moneyAlteringLocksmu.Unlock()
+
+	key := GamblingLockKey{
+		GuildID: guildID,
+		UserID:  userID,
+	}
+
+	delete(moneyAlteringLocks, key)
+}
+
+func moneyAlteringMW(inner dcmd.RunFunc) dcmd.RunFunc {
+	return func(data *dcmd.Data) (interface{}, error) {
+		if locked, resp := IsMoneyAlteringLocked(data.GS.ID, data.Msg.Author.ID); locked {
+			return ErrorEmbed(data.Msg.Author, resp), nil
+		}
+
+		return inner(data)
+	}
 }

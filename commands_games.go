@@ -161,6 +161,10 @@ var GameCommands = []*commands.YAGCommand{
 				return ErrorEmbed(u, "The rob command is still on cooldown for you for another %s", common.HumanizeDuration(common.DurationPrecisionSeconds, cooldownLeft)), nil
 			}
 
+			if target.ID == parsed.Msg.Author.ID {
+				return ErrorEmbed(u, "Can't rob yourself..."), nil
+			}
+
 			targetAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
