@@ -26,7 +26,7 @@ RUN git clone -b yagpdb https://github.com/jonas747/discordgo github.com/jonas74
   && git clone -b dgofork https://github.com/jonas747/dshardmanager github.com/jonas747/dshardmanager \
   && git clone -b dgofork https://github.com/jonas747/dcmd github.com/jonas747/dcmd
 
-RUN git clone https://github.com/jonas747/yageconomy github.com/jonas747/yageconomy
+RUN go get -d -v github.com/jonas747/yageconomy
 
 RUN go get -d -v \
   github.com/jonas747/yagpdb/cmd/yagpdb
