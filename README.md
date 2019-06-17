@@ -7,13 +7,13 @@ To use:
 
 If using docker, you need to make a couple changes to the docker file:
 
-1. Add `RUN git clone https://github.com/jonas747/yageconomy github.com/jonas747/yageconomy` under all the other `git clone ...` near the top 
+1. Add `RUN go get -d -v github.com/jonas747/yageconomy` under all the other `git clone ...` near the top 
 2. Uncomment the `COPY` statement for dev usage to apply the local changes we've made to the main.go file
 3. Copy the webserver files to the proper dir by putting `COPY --from=builder /go/src/github.com/jonas747/yageconomy/assets/*.html templates/plugins/` under `# Handle templates for plugins automatically`
 
 You should also make sure you're not using a prebuilt image by using the docker-compose.dev file instead of the standard one.
 
-It should look like this:
+After those changes it should look like this:
 
 ```
 
