@@ -421,7 +421,7 @@ var CoreAdminCommands = []*commands.YAGCommand{
 				return nil, err
 			}
 
-			_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, target.ID, amount)
+			_, err = common.PQ.Exec("UPDATE economy_users SET money_bank = money_bank + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, target.ID, amount)
 			if err != nil {
 				return nil, err
 			}
@@ -471,7 +471,7 @@ var CoreAdminCommands = []*commands.YAGCommand{
 					}
 
 					if !created {
-						_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, m.User.ID, amount)
+						_, err = common.PQ.Exec("UPDATE economy_users SET money_bank = money_bank + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, m.User.ID, amount)
 						if err != nil {
 							logger.WithError(err).Error("failed awarding money")
 						}
