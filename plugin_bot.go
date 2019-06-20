@@ -206,7 +206,7 @@ func handleMessageCreate(evt *eventsystem.EventData) {
 		// gen chat money maybe?
 		amount := rand.Int63n(conf.ChatmoneyAmountMax-conf.ChatmoneyAmountMin) + conf.ChatmoneyAmountMin
 
-		result, err := common.PQ.Exec(`UPDATE economy_users SET last_chatmoney_claim = now(), money_bank = money_bank + $4
+		result, err := common.PQ.Exec(`UPDATE economy_users SET last_chatmoney_claim = now(), money_wallet = money_wallet + $4
 			WHERE guild_id = $1 AND user_id = $2 AND EXTRACT(EPOCH FROM (now() - last_chatmoney_claim))  > $3`,
 			msg.GuildID, msg.Author.ID, conf.ChatmoneyFrequency, amount)
 		if err != nil {
