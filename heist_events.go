@@ -10,7 +10,7 @@ var (
 		Inner: &HeistMemberEvent{
 			Message:        "A hostage played hero and killed one of your guys.",
 			DeadMembersMin: 1,
-			DeadMembersMax: 1,
+			DeadMembersMax: 20,
 		},
 	}
 
@@ -19,7 +19,7 @@ var (
 		Inner: &HeistMoneyEvent{
 			Message:             "One of your members tripped, spilling some money in the process.",
 			MoneyLossPercentMin: 5,
-			MoneyLossPercentMax: 10,
+			MoneyLossPercentMax: 100,
 		},
 	}
 
@@ -28,7 +28,7 @@ var (
 		Inner: &HeistMemberEvent{
 			Message:           "One of your crewmembers tripped and hurt themselves... Amateur.",
 			InjuredMembersMin: 1,
-			InjuredMembersMax: 1,
+			InjuredMembersMax: 20,
 		},
 	}
 )
@@ -49,7 +49,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			Inner: &HeistMoneyEvent{
 				Message:             "One of your crew members shot a hostage trying to play hero, you're gonna have to bribe some people to get out of this...",
 				MoneyLossPercentMin: 20,
-				MoneyLossPercentMax: 30,
+				MoneyLossPercentMax: 80,
 			},
 		},
 		heistEvtHostageHero,
@@ -65,7 +65,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			Inner: &HeistMoneyEvent{
 				Message:             "One of your bags ripped open and there's now money everywhere.",
 				MoneyLossPercentMin: 10,
-				MoneyLossPercentMax: 30,
+				MoneyLossPercentMax: 100,
 			},
 		},
 
@@ -74,7 +74,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			Inner: &HeistMemberEvent{
 				Message:        "One of your crew members tripped because of the stress then hit their head and died. Can we get an F in chat?",
 				DeadMembersMin: 1,
-				DeadMembersMax: 1,
+				DeadMembersMax: 20,
 			},
 		},
 
@@ -83,7 +83,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			Inner: &HeistMemberEvent{
 				Message:           "One of your crew members tripped because of the stress and injured themselves.",
 				InjuredMembersMin: 1,
-				InjuredMembersMax: 1,
+				InjuredMembersMax: 20,
 			},
 		},
 		heistEvtHostageHero,
@@ -97,7 +97,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			Chance: 0.25,
 			Inner: &HeistEventIncreaseChance{
 				Message: "As you're walking out, a hostage spots a tattoo on one of your crew members.",
-				Amount:  10,
+				Amount:  60,
 			},
 		},
 		heistEvtHostageHero,
@@ -112,10 +112,10 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			Chance: 0.25,
 			Inner: &HeistMemberEvent{
 				Message:           "There's a blockade up ahead, giving you all kinds of trouble!",
-				DeadMembersMin:    0,
-				DeadMembersMax:    2,
-				InjuredMembersMin: 0,
-				InjuredMembersMax: 2,
+				DeadMembersMin:    1,
+				DeadMembersMax:    5,
+				InjuredMembersMin: 1,
+				InjuredMembersMax: 10,
 			},
 		},
 	},
