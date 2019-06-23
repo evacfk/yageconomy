@@ -8,9 +8,18 @@ var (
 	heistEvtHostageHero = &HeistEventChance{
 		Chance: 0.1,
 		Inner: &HeistMemberEvent{
-			Message:        "A hostage played hero and killed one of your guys.",
+			Message:        "A hostage played hero and started shooting at your team.",
 			DeadMembersMin: 1,
 			DeadMembersMax: 20,
+		},
+	}
+	
+	heistEvtEvacMad = &HeistEventChance{
+		Chance: 0.5,
+		Inner: &HeistMemberEvent{
+			Message:        "Someone pinged evac, he pressed the ban button.",
+			DeadMembersMin: 1,
+			DeadMembersMax: 1,
 		},
 	}
 
@@ -26,7 +35,7 @@ var (
 	heistEvtTripInjury = &HeistEventChance{
 		Chance: 0.25,
 		Inner: &HeistMemberEvent{
-			Message:           "One of your crewmembers tripped and hurt themselves... Amateur.",
+			Message:           "Evac saw your crew post a gambling command in cuddle, they were fined.",
 			InjuredMembersMin: 1,
 			InjuredMembersMax: 20,
 		},
@@ -53,6 +62,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			},
 		},
 		heistEvtHostageHero,
+		heistEvtEvacMad,
 		heistEvtTripInjury,
 	},
 	HeistProgressStateCollecting: []HeistEvent{
@@ -87,6 +97,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			},
 		},
 		heistEvtHostageHero,
+		heistEvtEvacMad,
 	},
 	HeistProgressStateLeaving: []HeistEvent{
 		&BasicHeistEvent{
@@ -100,6 +111,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 				Amount:  60,
 			},
 		},
+		heistEvtEvacMad,
 		heistEvtHostageHero,
 		heistEvtTripInjury,
 	},
