@@ -610,7 +610,7 @@ func (hs *HeistSession) finishHeistUser(config *models.EconomyConfig, v *HeistUs
 		if v.Injured {
 			// take away 10% if they're injured
 			win = int64(float64(win) * 0.9)
-			extraStr = "(injured, -10%)"
+			extraStr = "(injured, -33%)"
 		}
 
 		builder.WriteString(fmt.Sprintf("%d%s", win, extraStr))
