@@ -545,7 +545,7 @@ func (hs *HeistSession) End() {
 		builder.WriteString(joinUsers(alive) + " made it out alive")
 
 		botAccount := hs.BotAccount
-		profit := botAccount.MoneyWallet + botAccount.MoneyBank / 3
+		profit := 1000000
 
 		if hs.MoneyLostPercentage >= 100 {
 			builder.WriteString(", but you lost all the money...")
