@@ -28,7 +28,7 @@ func (p *Plugin) updateInterestsLoop() {
 }
 
 func (p *Plugin) updateInterests() error {
-	result, err := common.PQ.Exec("UPDATE economy_users SET money_bank = money_bank * 0.98, last_interest_update = now() WHERE (now() - last_interest_update) > interval '2 days'")
+	result, err := common.PQ.Exec("UPDATE economy_users SET money_bank = money_bank * 1.01, last_interest_update = now() WHERE (now() - last_interest_update) > interval '2 days'")
 	if err != nil {
 		return err
 	}
