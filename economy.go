@@ -15,7 +15,7 @@ var logger = common.GetPluginLogger(&Plugin{})
 
 func RegisterPlugin() {
 	plugin := &Plugin{}
-	common.InitSchema(DBSchema, "economy")
+	common.InitSchemas("economy", DBSchemas...)
 	common.RegisterPlugin(plugin)
 }
 
