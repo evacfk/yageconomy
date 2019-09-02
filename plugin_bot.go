@@ -16,6 +16,7 @@ import (
 	"github.com/jonas747/yagpdb/common"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 	"golang.org/x/image/font/gofont/goregular"
 	"image"
 	"image/color"
@@ -253,7 +254,7 @@ func PlantMoney(ctx context.Context, conf *models.EconomyConfig, channelID, auth
 		password = genPlantPassword()
 	}
 
-	r, err := models.FindEconomyPickImageG(ctx, conf.GuildID)
+	r, err := getRandomPlantImage(ctx, conf.GuildID)
 	if err != nil && errors.Cause(err) != sql.ErrNoRows {
 		return err
 	}
@@ -335,6 +336,25 @@ func PlantMoney(ctx context.Context, conf *models.EconomyConfig, channelID, auth
 	err = m.InsertG(ctx, boil.Infer())
 
 	return err
+}
+
+func getRandomPlantImage(ctx context.Context, guildID int64) (*models.EconomyPickImages2, error) {
+	// models.FindEconomyPickImageG(ctx, conf.GuildID)
+
+	imgs, err := models.EconomyPickImages2s(qm.Select("id"), qm.Where("guild_id=?", guildID)).AllG(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(imgs) < 1 {
+		return nil, nil
+	}
+
+	imgID := imgs[rand.Intn(len(imgs))].ID
+
+	// get the full image
+	img, err := models.FindEconomyPickImages2G(ctx, imgID)
+	return img, err
 }
 
 var (

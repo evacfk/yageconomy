@@ -437,7 +437,7 @@ func testEconomyConfigsUpdate(t *testing.T) {
 	if 0 == len(economyConfigPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(economyConfigColumns) == len(economyConfigPrimaryKeyColumns) {
+	if len(economyConfigAllColumns) == len(economyConfigPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -478,7 +478,7 @@ func testEconomyConfigsUpdate(t *testing.T) {
 func testEconomyConfigsSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(economyConfigColumns) == len(economyConfigPrimaryKeyColumns) {
+	if len(economyConfigAllColumns) == len(economyConfigPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -511,11 +511,11 @@ func testEconomyConfigsSliceUpdateAll(t *testing.T) {
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(economyConfigColumns, economyConfigPrimaryKeyColumns) {
-		fields = economyConfigColumns
+	if strmangle.StringSliceMatch(economyConfigAllColumns, economyConfigPrimaryKeyColumns) {
+		fields = economyConfigAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			economyConfigColumns,
+			economyConfigAllColumns,
 			economyConfigPrimaryKeyColumns,
 		)
 	}
@@ -545,7 +545,7 @@ func testEconomyConfigsSliceUpdateAll(t *testing.T) {
 func testEconomyConfigsUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(economyConfigColumns) == len(economyConfigPrimaryKeyColumns) {
+	if len(economyConfigAllColumns) == len(economyConfigPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 

@@ -60,12 +60,12 @@ var EconomyWaifuItemWhere = struct {
 	Price         whereHelperint
 	GamblingBoost whereHelperint
 }{
-	GuildID:       whereHelperint64{field: `guild_id`},
-	LocalID:       whereHelperint64{field: `local_id`},
-	Name:          whereHelperstring{field: `name`},
-	Icon:          whereHelperstring{field: `icon`},
-	Price:         whereHelperint{field: `price`},
-	GamblingBoost: whereHelperint{field: `gambling_boost`},
+	GuildID:       whereHelperint64{field: "\"economy_waifu_items\".\"guild_id\""},
+	LocalID:       whereHelperint64{field: "\"economy_waifu_items\".\"local_id\""},
+	Name:          whereHelperstring{field: "\"economy_waifu_items\".\"name\""},
+	Icon:          whereHelperstring{field: "\"economy_waifu_items\".\"icon\""},
+	Price:         whereHelperint{field: "\"economy_waifu_items\".\"price\""},
+	GamblingBoost: whereHelperint{field: "\"economy_waifu_items\".\"gambling_boost\""},
 }
 
 // EconomyWaifuItemRels is where relationship names are stored.
@@ -85,7 +85,7 @@ func (*economyWaifuItemR) NewStruct() *economyWaifuItemR {
 type economyWaifuItemL struct{}
 
 var (
-	economyWaifuItemColumns               = []string{"guild_id", "local_id", "name", "icon", "price", "gambling_boost"}
+	economyWaifuItemAllColumns            = []string{"guild_id", "local_id", "name", "icon", "price", "gambling_boost"}
 	economyWaifuItemColumnsWithoutDefault = []string{"guild_id", "local_id", "name", "icon", "price"}
 	economyWaifuItemColumnsWithDefault    = []string{"gambling_boost"}
 	economyWaifuItemPrimaryKeyColumns     = []string{"guild_id", "local_id"}
@@ -262,7 +262,7 @@ func (o *EconomyWaifuItem) Insert(ctx context.Context, exec boil.ContextExecutor
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			economyWaifuItemColumns,
+			economyWaifuItemAllColumns,
 			economyWaifuItemColumnsWithDefault,
 			economyWaifuItemColumnsWithoutDefault,
 			nzDefaults,
@@ -336,7 +336,7 @@ func (o *EconomyWaifuItem) Update(ctx context.Context, exec boil.ContextExecutor
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			economyWaifuItemColumns,
+			economyWaifuItemAllColumns,
 			economyWaifuItemPrimaryKeyColumns,
 		)
 
@@ -509,13 +509,13 @@ func (o *EconomyWaifuItem) Upsert(ctx context.Context, exec boil.ContextExecutor
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			economyWaifuItemColumns,
+			economyWaifuItemAllColumns,
 			economyWaifuItemColumnsWithDefault,
 			economyWaifuItemColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			economyWaifuItemColumns,
+			economyWaifuItemAllColumns,
 			economyWaifuItemPrimaryKeyColumns,
 		)
 
@@ -637,10 +637,6 @@ func (o EconomyWaifuItemSlice) DeleteAllG(ctx context.Context) (int64, error) {
 
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o EconomyWaifuItemSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
-	if o == nil {
-		return 0, errors.New("models: no EconomyWaifuItem slice provided for delete all")
-	}
-
 	if len(o) == 0 {
 		return 0, nil
 	}

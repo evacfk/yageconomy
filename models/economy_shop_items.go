@@ -68,14 +68,14 @@ var EconomyShopItemWhere = struct {
 	Cost                    whereHelperint64
 	Type                    whereHelperint16
 }{
-	GuildID:                 whereHelperint64{field: `guild_id`},
-	LocalID:                 whereHelperint64{field: `local_id`},
-	Icon:                    whereHelperstring{field: `icon`},
-	Name:                    whereHelperstring{field: `name`},
-	RoleID:                  whereHelperint64{field: `role_id`},
-	GamblingBoostPercentage: whereHelperint{field: `gambling_boost_percentage`},
-	Cost:                    whereHelperint64{field: `cost`},
-	Type:                    whereHelperint16{field: `type`},
+	GuildID:                 whereHelperint64{field: "\"economy_shop_items\".\"guild_id\""},
+	LocalID:                 whereHelperint64{field: "\"economy_shop_items\".\"local_id\""},
+	Icon:                    whereHelperstring{field: "\"economy_shop_items\".\"icon\""},
+	Name:                    whereHelperstring{field: "\"economy_shop_items\".\"name\""},
+	RoleID:                  whereHelperint64{field: "\"economy_shop_items\".\"role_id\""},
+	GamblingBoostPercentage: whereHelperint{field: "\"economy_shop_items\".\"gambling_boost_percentage\""},
+	Cost:                    whereHelperint64{field: "\"economy_shop_items\".\"cost\""},
+	Type:                    whereHelperint16{field: "\"economy_shop_items\".\"type\""},
 }
 
 // EconomyShopItemRels is where relationship names are stored.
@@ -95,7 +95,7 @@ func (*economyShopItemR) NewStruct() *economyShopItemR {
 type economyShopItemL struct{}
 
 var (
-	economyShopItemColumns               = []string{"guild_id", "local_id", "icon", "name", "role_id", "gambling_boost_percentage", "cost", "type"}
+	economyShopItemAllColumns            = []string{"guild_id", "local_id", "icon", "name", "role_id", "gambling_boost_percentage", "cost", "type"}
 	economyShopItemColumnsWithoutDefault = []string{"guild_id", "local_id", "icon", "name", "role_id", "gambling_boost_percentage", "cost", "type"}
 	economyShopItemColumnsWithDefault    = []string{}
 	economyShopItemPrimaryKeyColumns     = []string{"guild_id", "local_id"}
@@ -272,7 +272,7 @@ func (o *EconomyShopItem) Insert(ctx context.Context, exec boil.ContextExecutor,
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			economyShopItemColumns,
+			economyShopItemAllColumns,
 			economyShopItemColumnsWithDefault,
 			economyShopItemColumnsWithoutDefault,
 			nzDefaults,
@@ -346,7 +346,7 @@ func (o *EconomyShopItem) Update(ctx context.Context, exec boil.ContextExecutor,
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			economyShopItemColumns,
+			economyShopItemAllColumns,
 			economyShopItemPrimaryKeyColumns,
 		)
 
@@ -519,13 +519,13 @@ func (o *EconomyShopItem) Upsert(ctx context.Context, exec boil.ContextExecutor,
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			economyShopItemColumns,
+			economyShopItemAllColumns,
 			economyShopItemColumnsWithDefault,
 			economyShopItemColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			economyShopItemColumns,
+			economyShopItemAllColumns,
 			economyShopItemPrimaryKeyColumns,
 		)
 
@@ -647,10 +647,6 @@ func (o EconomyShopItemSlice) DeleteAllG(ctx context.Context) (int64, error) {
 
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o EconomyShopItemSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
-	if o == nil {
-		return 0, errors.New("models: no EconomyShopItem slice provided for delete all")
-	}
-
 	if len(o) == 0 {
 		return 0, nil
 	}

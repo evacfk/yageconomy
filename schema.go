@@ -153,8 +153,9 @@ CREATE TABLE IF NOT EXISTS economy_plants (
 );
 
 `, `
-CREATE TABLE IF NOT EXISTS economy_pick_images (
-	guild_id BIGINT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS economy_pick_images2 (
+	id BIGSERIAL PRIMARY KEY,
+	guild_id BIGINT NOT NULL,
 	image BYTEA NOT NULL
 );
 `, `

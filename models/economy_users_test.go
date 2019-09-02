@@ -437,7 +437,7 @@ func testEconomyUsersUpdate(t *testing.T) {
 	if 0 == len(economyUserPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(economyUserColumns) == len(economyUserPrimaryKeyColumns) {
+	if len(economyUserAllColumns) == len(economyUserPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -478,7 +478,7 @@ func testEconomyUsersUpdate(t *testing.T) {
 func testEconomyUsersSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(economyUserColumns) == len(economyUserPrimaryKeyColumns) {
+	if len(economyUserAllColumns) == len(economyUserPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -511,11 +511,11 @@ func testEconomyUsersSliceUpdateAll(t *testing.T) {
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(economyUserColumns, economyUserPrimaryKeyColumns) {
-		fields = economyUserColumns
+	if strmangle.StringSliceMatch(economyUserAllColumns, economyUserPrimaryKeyColumns) {
+		fields = economyUserAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			economyUserColumns,
+			economyUserAllColumns,
 			economyUserPrimaryKeyColumns,
 		)
 	}
@@ -545,7 +545,7 @@ func testEconomyUsersSliceUpdateAll(t *testing.T) {
 func testEconomyUsersUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(economyUserColumns) == len(economyUserPrimaryKeyColumns) {
+	if len(economyUserAllColumns) == len(economyUserPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 

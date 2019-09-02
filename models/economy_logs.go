@@ -69,12 +69,12 @@ var EconomyLogWhere = struct {
 	Amount   whereHelperint64
 	Action   whereHelperint16
 }{
-	ID:       whereHelperint64{field: `id`},
-	GuildID:  whereHelperint64{field: `guild_id`},
-	AuthorID: whereHelperint64{field: `author_id`},
-	TargetID: whereHelperint64{field: `target_id`},
-	Amount:   whereHelperint64{field: `amount`},
-	Action:   whereHelperint16{field: `action`},
+	ID:       whereHelperint64{field: "\"economy_logs\".\"id\""},
+	GuildID:  whereHelperint64{field: "\"economy_logs\".\"guild_id\""},
+	AuthorID: whereHelperint64{field: "\"economy_logs\".\"author_id\""},
+	TargetID: whereHelperint64{field: "\"economy_logs\".\"target_id\""},
+	Amount:   whereHelperint64{field: "\"economy_logs\".\"amount\""},
+	Action:   whereHelperint16{field: "\"economy_logs\".\"action\""},
 }
 
 // EconomyLogRels is where relationship names are stored.
@@ -94,7 +94,7 @@ func (*economyLogR) NewStruct() *economyLogR {
 type economyLogL struct{}
 
 var (
-	economyLogColumns               = []string{"id", "guild_id", "author_id", "target_id", "amount", "action"}
+	economyLogAllColumns            = []string{"id", "guild_id", "author_id", "target_id", "amount", "action"}
 	economyLogColumnsWithoutDefault = []string{"guild_id", "author_id", "target_id", "amount", "action"}
 	economyLogColumnsWithDefault    = []string{"id"}
 	economyLogPrimaryKeyColumns     = []string{"id"}
@@ -271,7 +271,7 @@ func (o *EconomyLog) Insert(ctx context.Context, exec boil.ContextExecutor, colu
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			economyLogColumns,
+			economyLogAllColumns,
 			economyLogColumnsWithDefault,
 			economyLogColumnsWithoutDefault,
 			nzDefaults,
@@ -345,7 +345,7 @@ func (o *EconomyLog) Update(ctx context.Context, exec boil.ContextExecutor, colu
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			economyLogColumns,
+			economyLogAllColumns,
 			economyLogPrimaryKeyColumns,
 		)
 
@@ -518,13 +518,13 @@ func (o *EconomyLog) Upsert(ctx context.Context, exec boil.ContextExecutor, upda
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			economyLogColumns,
+			economyLogAllColumns,
 			economyLogColumnsWithDefault,
 			economyLogColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			economyLogColumns,
+			economyLogAllColumns,
 			economyLogPrimaryKeyColumns,
 		)
 
@@ -646,10 +646,6 @@ func (o EconomyLogSlice) DeleteAllG(ctx context.Context) (int64, error) {
 
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o EconomyLogSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
-	if o == nil {
-		return 0, errors.New("models: no EconomyLog slice provided for delete all")
-	}
-
 	if len(o) == 0 {
 		return 0, nil
 	}

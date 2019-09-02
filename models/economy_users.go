@@ -117,26 +117,26 @@ var EconomyUserWhere = struct {
 	LastRobAttempt          whereHelpertime_Time
 	LastFailedHeist         whereHelpertime_Time
 }{
-	GuildID:                 whereHelperint64{field: `guild_id`},
-	UserID:                  whereHelperint64{field: `user_id`},
-	MoneyBank:               whereHelperint64{field: `money_bank`},
-	MoneyWallet:             whereHelperint64{field: `money_wallet`},
-	LastDailyClaim:          whereHelpertime_Time{field: `last_daily_claim`},
-	LastChatmoneyClaim:      whereHelpertime_Time{field: `last_chatmoney_claim`},
-	LastFishing:             whereHelpertime_Time{field: `last_fishing`},
-	WaifudBy:                whereHelperint64{field: `waifud_by`},
-	Waifus:                  whereHelpertypes_Int64Array{field: `waifus`},
-	WaifuItemWorth:          whereHelperint64{field: `waifu_item_worth`},
-	WaifuLastClaimAmount:    whereHelperint64{field: `waifu_last_claim_amount`},
-	WaifuExtraWorth:         whereHelperint64{field: `waifu_extra_worth`},
-	WaifuAffinityTowards:    whereHelperint64{field: `waifu_affinity_towards`},
-	WaifuDivorces:           whereHelperint{field: `waifu_divorces`},
-	WaifuAffinityChanges:    whereHelperint{field: `waifu_affinity_changes`},
-	FishCaugth:              whereHelperint64{field: `fish_caugth`},
-	GamblingBoostPercentage: whereHelperint{field: `gambling_boost_percentage`},
-	LastInterestUpdate:      whereHelpertime_Time{field: `last_interest_update`},
-	LastRobAttempt:          whereHelpertime_Time{field: `last_rob_attempt`},
-	LastFailedHeist:         whereHelpertime_Time{field: `last_failed_heist`},
+	GuildID:                 whereHelperint64{field: "\"economy_users\".\"guild_id\""},
+	UserID:                  whereHelperint64{field: "\"economy_users\".\"user_id\""},
+	MoneyBank:               whereHelperint64{field: "\"economy_users\".\"money_bank\""},
+	MoneyWallet:             whereHelperint64{field: "\"economy_users\".\"money_wallet\""},
+	LastDailyClaim:          whereHelpertime_Time{field: "\"economy_users\".\"last_daily_claim\""},
+	LastChatmoneyClaim:      whereHelpertime_Time{field: "\"economy_users\".\"last_chatmoney_claim\""},
+	LastFishing:             whereHelpertime_Time{field: "\"economy_users\".\"last_fishing\""},
+	WaifudBy:                whereHelperint64{field: "\"economy_users\".\"waifud_by\""},
+	Waifus:                  whereHelpertypes_Int64Array{field: "\"economy_users\".\"waifus\""},
+	WaifuItemWorth:          whereHelperint64{field: "\"economy_users\".\"waifu_item_worth\""},
+	WaifuLastClaimAmount:    whereHelperint64{field: "\"economy_users\".\"waifu_last_claim_amount\""},
+	WaifuExtraWorth:         whereHelperint64{field: "\"economy_users\".\"waifu_extra_worth\""},
+	WaifuAffinityTowards:    whereHelperint64{field: "\"economy_users\".\"waifu_affinity_towards\""},
+	WaifuDivorces:           whereHelperint{field: "\"economy_users\".\"waifu_divorces\""},
+	WaifuAffinityChanges:    whereHelperint{field: "\"economy_users\".\"waifu_affinity_changes\""},
+	FishCaugth:              whereHelperint64{field: "\"economy_users\".\"fish_caugth\""},
+	GamblingBoostPercentage: whereHelperint{field: "\"economy_users\".\"gambling_boost_percentage\""},
+	LastInterestUpdate:      whereHelpertime_Time{field: "\"economy_users\".\"last_interest_update\""},
+	LastRobAttempt:          whereHelpertime_Time{field: "\"economy_users\".\"last_rob_attempt\""},
+	LastFailedHeist:         whereHelpertime_Time{field: "\"economy_users\".\"last_failed_heist\""},
 }
 
 // EconomyUserRels is where relationship names are stored.
@@ -156,7 +156,7 @@ func (*economyUserR) NewStruct() *economyUserR {
 type economyUserL struct{}
 
 var (
-	economyUserColumns               = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_item_worth", "waifu_last_claim_amount", "waifu_extra_worth", "waifu_affinity_towards", "waifu_divorces", "waifu_affinity_changes", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt", "last_failed_heist"}
+	economyUserAllColumns            = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_item_worth", "waifu_last_claim_amount", "waifu_extra_worth", "waifu_affinity_towards", "waifu_divorces", "waifu_affinity_changes", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt", "last_failed_heist"}
 	economyUserColumnsWithoutDefault = []string{"guild_id", "user_id", "money_bank", "money_wallet", "last_daily_claim", "last_chatmoney_claim", "last_fishing", "waifud_by", "waifus", "waifu_item_worth", "waifu_last_claim_amount", "waifu_extra_worth", "waifu_affinity_towards", "waifu_divorces", "waifu_affinity_changes", "fish_caugth", "gambling_boost_percentage", "last_interest_update", "last_rob_attempt"}
 	economyUserColumnsWithDefault    = []string{"last_failed_heist"}
 	economyUserPrimaryKeyColumns     = []string{"guild_id", "user_id"}
@@ -333,7 +333,7 @@ func (o *EconomyUser) Insert(ctx context.Context, exec boil.ContextExecutor, col
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			economyUserColumns,
+			economyUserAllColumns,
 			economyUserColumnsWithDefault,
 			economyUserColumnsWithoutDefault,
 			nzDefaults,
@@ -407,7 +407,7 @@ func (o *EconomyUser) Update(ctx context.Context, exec boil.ContextExecutor, col
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			economyUserColumns,
+			economyUserAllColumns,
 			economyUserPrimaryKeyColumns,
 		)
 
@@ -580,13 +580,13 @@ func (o *EconomyUser) Upsert(ctx context.Context, exec boil.ContextExecutor, upd
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			economyUserColumns,
+			economyUserAllColumns,
 			economyUserColumnsWithDefault,
 			economyUserColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			economyUserColumns,
+			economyUserAllColumns,
 			economyUserPrimaryKeyColumns,
 		)
 
@@ -708,10 +708,6 @@ func (o EconomyUserSlice) DeleteAllG(ctx context.Context) (int64, error) {
 
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o EconomyUserSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
-	if o == nil {
-		return 0, errors.New("models: no EconomyUser slice provided for delete all")
-	}
-
 	if len(o) == 0 {
 		return 0, nil
 	}
