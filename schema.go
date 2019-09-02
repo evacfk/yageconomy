@@ -39,6 +39,8 @@ ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_failed_gambling_ban_d
 `, `
 ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_last_usage TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now() - interval '10 days';
 `, `
+ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_fixed_payout INT NOT NULL DEFAULT 0;
+`, `
 
 CREATE TABLE IF NOT EXISTS economy_users (
 	guild_id BIGINT NOT NULL,

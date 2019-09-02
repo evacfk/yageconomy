@@ -48,6 +48,7 @@ type EconomyConfig struct {
 	HeistServerCooldown            int              `boil:"heist_server_cooldown" json:"heist_server_cooldown" toml:"heist_server_cooldown" yaml:"heist_server_cooldown"`
 	HeistFailedGamblingBanDuration int              `boil:"heist_failed_gambling_ban_duration" json:"heist_failed_gambling_ban_duration" toml:"heist_failed_gambling_ban_duration" yaml:"heist_failed_gambling_ban_duration"`
 	HeistLastUsage                 time.Time        `boil:"heist_last_usage" json:"heist_last_usage" toml:"heist_last_usage" yaml:"heist_last_usage"`
+	HeistFixedPayout               int              `boil:"heist_fixed_payout" json:"heist_fixed_payout" toml:"heist_fixed_payout" yaml:"heist_fixed_payout"`
 
 	R *economyConfigR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L economyConfigL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -78,6 +79,7 @@ var EconomyConfigColumns = struct {
 	HeistServerCooldown            string
 	HeistFailedGamblingBanDuration string
 	HeistLastUsage                 string
+	HeistFixedPayout               string
 }{
 	GuildID:                        "guild_id",
 	Enabled:                        "enabled",
@@ -103,6 +105,7 @@ var EconomyConfigColumns = struct {
 	HeistServerCooldown:            "heist_server_cooldown",
 	HeistFailedGamblingBanDuration: "heist_failed_gambling_ban_duration",
 	HeistLastUsage:                 "heist_last_usage",
+	HeistFixedPayout:               "heist_fixed_payout",
 }
 
 // Generated where
@@ -233,6 +236,7 @@ var EconomyConfigWhere = struct {
 	HeistServerCooldown            whereHelperint
 	HeistFailedGamblingBanDuration whereHelperint
 	HeistLastUsage                 whereHelpertime_Time
+	HeistFixedPayout               whereHelperint
 }{
 	GuildID:                        whereHelperint64{field: "\"economy_configs\".\"guild_id\""},
 	Enabled:                        whereHelperbool{field: "\"economy_configs\".\"enabled\""},
@@ -258,6 +262,7 @@ var EconomyConfigWhere = struct {
 	HeistServerCooldown:            whereHelperint{field: "\"economy_configs\".\"heist_server_cooldown\""},
 	HeistFailedGamblingBanDuration: whereHelperint{field: "\"economy_configs\".\"heist_failed_gambling_ban_duration\""},
 	HeistLastUsage:                 whereHelpertime_Time{field: "\"economy_configs\".\"heist_last_usage\""},
+	HeistFixedPayout:               whereHelperint{field: "\"economy_configs\".\"heist_fixed_payout\""},
 }
 
 // EconomyConfigRels is where relationship names are stored.
@@ -277,9 +282,9 @@ func (*economyConfigR) NewStruct() *economyConfigR {
 type economyConfigL struct{}
 
 var (
-	economyConfigAllColumns            = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown", "heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage"}
+	economyConfigAllColumns            = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown", "heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage", "heist_fixed_payout"}
 	economyConfigColumnsWithoutDefault = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown"}
-	economyConfigColumnsWithDefault    = []string{"heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage"}
+	economyConfigColumnsWithDefault    = []string{"heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage", "heist_fixed_payout"}
 	economyConfigPrimaryKeyColumns     = []string{"guild_id"}
 )
 

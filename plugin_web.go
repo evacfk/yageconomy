@@ -43,6 +43,7 @@ type PostConfigForm struct {
 	FishingMinWinAmount            int64
 	HeistServerCooldown            int
 	HeistFailedGamblingBanDuration int
+	HeistFixedPayout               int
 }
 
 func (p PostConfigForm) DBModel() *models.EconomyConfig {
@@ -69,6 +70,7 @@ func (p PostConfigForm) DBModel() *models.EconomyConfig {
 		FishingMinWinAmount:            p.FishingMinWinAmount,
 		HeistServerCooldown:            p.HeistServerCooldown,
 		HeistFailedGamblingBanDuration: p.HeistFailedGamblingBanDuration,
+		HeistFixedPayout:               p.HeistFixedPayout,
 	}
 }
 
