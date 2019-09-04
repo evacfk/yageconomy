@@ -9,18 +9,21 @@ import (
 	"github.com/jonas747/yagpdb/web"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 	"github.com/volatiletech/sqlboiler/types"
 	"goji.io"
 	"goji.io/pat"
 	"image"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 type PostConfigForm struct {
 	Enabled                        bool
 	Admins                         []int64 `valid:"role,true"`
+	EnabledChannels                []int64 `valid:"channel,true"`
 	CurrencyName                   string  `valid:",1,50"`
 	CurrencyNamePlural             string  `valid:",1,50"`
 	CurrencySymbol                 string  `valid:",1,50"`
@@ -41,12 +44,14 @@ type PostConfigForm struct {
 	FishingMinWinAmount            int64
 	HeistServerCooldown            int
 	HeistFailedGamblingBanDuration int
+	HeistFixedPayout               int
 }
 
 func (p PostConfigForm) DBModel() *models.EconomyConfig {
 	return &models.EconomyConfig{
 		Enabled:                        p.Enabled,
 		Admins:                         p.Admins,
+		EnabledChannels:                p.EnabledChannels,
 		CurrencyName:                   p.CurrencyName,
 		CurrencyNamePlural:             p.CurrencyNamePlural,
 		CurrencySymbol:                 p.CurrencySymbol,
@@ -67,6 +72,7 @@ func (p PostConfigForm) DBModel() *models.EconomyConfig {
 		FishingMinWinAmount:            p.FishingMinWinAmount,
 		HeistServerCooldown:            p.HeistServerCooldown,
 		HeistFailedGamblingBanDuration: p.HeistFailedGamblingBanDuration,
+		HeistFixedPayout:               p.HeistFixedPayout,
 	}
 }
 
@@ -88,11 +94,13 @@ func (p *Plugin) InitWeb() {
 
 	subMux.Handle(pat.Get(""), mainGetHandler)
 	subMux.Handle(pat.Get("/"), mainGetHandler)
-	subMux.Handle(pat.Get("/pick_image"), http.HandlerFunc(handleGetPickImage))
-	subMux.Handle(pat.Post("/pick_image"), web.ControllerPostHandler(HandleSetImage, mainGetHandler, nil, "Updated economy pick image"))
+
+	subMux.Handle(pat.Get("/pick_image/:image_id"), http.HandlerFunc(handleGetPickImage))
+
+	subMux.Handle(pat.Post("/delete_pick_image/:image_id"), web.ControllerPostHandler(handleDeleteImage, mainGetHandler, nil, "Deleted a economy pick image"))
+	subMux.Handle(pat.Post("/pick_image"), web.ControllerPostHandler(handleUploadImage, mainGetHandler, nil, "uploaded a economy pick image"))
 	subMux.Handle(pat.Post(""), web.ControllerPostHandler(handlePostEconomy, mainGetHandler, PostConfigForm{}, "Updated economy config"))
 	subMux.Handle(pat.Post("/"), web.ControllerPostHandler(handlePostEconomy, mainGetHandler, PostConfigForm{}, "Updated economy config"))
-
 }
 
 func tmplFormatPercentage(in *decimal.Big) string {
@@ -102,6 +110,13 @@ func tmplFormatPercentage(in *decimal.Big) string {
 
 func handleGetEconomy(w http.ResponseWriter, r *http.Request) (web.TemplateData, error) {
 	g, templateData := web.GetBaseCPContextData(r.Context())
+
+	imgs, err := models.EconomyPickImages2s(qm.Select("id"), qm.Where("guild_id=?", g.ID)).AllG(r.Context())
+	if err != nil {
+		return templateData, err
+	}
+
+	templateData["PickImages"] = imgs
 
 	templateData["fmtDecimalPercentage"] = tmplFormatPercentage
 
@@ -138,7 +153,9 @@ func handlePostEconomy(w http.ResponseWriter, r *http.Request) (templateData web
 func handleGetPickImage(w http.ResponseWriter, r *http.Request) {
 	g, _ := web.GetBaseCPContextData(r.Context())
 
-	row, err := models.FindEconomyPickImageG(r.Context(), g.ID)
+	imageID, _ := strconv.ParseInt(pat.Param(r, "image_id"), 10, 64)
+
+	row, err := models.EconomyPickImages2s(qm.Where("guild_id=?", g.ID), qm.Where("id=?", imageID)).OneG(r.Context())
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			w.WriteHeader(404)
@@ -153,7 +170,16 @@ func handleGetPickImage(w http.ResponseWriter, r *http.Request) {
 	w.Write(row.Image)
 }
 
-func HandleSetImage(w http.ResponseWriter, r *http.Request) (web.TemplateData, error) {
+func handleDeleteImage(w http.ResponseWriter, r *http.Request) (web.TemplateData, error) {
+	g, tmplData := web.GetBaseCPContextData(r.Context())
+
+	imageID, _ := strconv.ParseInt(pat.Param(r, "image_id"), 10, 64)
+
+	_, err := models.EconomyPickImages2s(qm.Where("guild_id=?", g.ID), qm.Where("id=?", imageID)).DeleteAll(r.Context(), common.PQ)
+	return tmplData, err
+}
+
+func handleUploadImage(w http.ResponseWriter, r *http.Request) (web.TemplateData, error) {
 	ctx := r.Context()
 	g, tmpl := web.GetBaseCPContextData(ctx)
 
@@ -181,11 +207,11 @@ func HandleSetImage(w http.ResponseWriter, r *http.Request) (web.TemplateData, e
 		return tmpl.AddAlerts(web.ErrorAlert("Max image size is 1080x1920")), nil
 	}
 
-	m := models.EconomyPickImage{
+	m := models.EconomyPickImages2{
 		GuildID: g.ID,
 		Image:   buf,
 	}
 
-	err = m.UpsertG(r.Context(), true, []string{"guild_id"}, boil.Whitelist("image"), boil.Whitelist("guild_id", "image"))
+	err = m.InsertG(r.Context(), boil.Infer())
 	return tmpl, err
 }

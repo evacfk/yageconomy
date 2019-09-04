@@ -437,7 +437,7 @@ func testEconomyShopListItemsUpdate(t *testing.T) {
 	if 0 == len(economyShopListItemPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(economyShopListItemColumns) == len(economyShopListItemPrimaryKeyColumns) {
+	if len(economyShopListItemAllColumns) == len(economyShopListItemPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -478,7 +478,7 @@ func testEconomyShopListItemsUpdate(t *testing.T) {
 func testEconomyShopListItemsSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(economyShopListItemColumns) == len(economyShopListItemPrimaryKeyColumns) {
+	if len(economyShopListItemAllColumns) == len(economyShopListItemPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -511,11 +511,11 @@ func testEconomyShopListItemsSliceUpdateAll(t *testing.T) {
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(economyShopListItemColumns, economyShopListItemPrimaryKeyColumns) {
-		fields = economyShopListItemColumns
+	if strmangle.StringSliceMatch(economyShopListItemAllColumns, economyShopListItemPrimaryKeyColumns) {
+		fields = economyShopListItemAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			economyShopListItemColumns,
+			economyShopListItemAllColumns,
 			economyShopListItemPrimaryKeyColumns,
 		)
 	}
@@ -545,7 +545,7 @@ func testEconomyShopListItemsSliceUpdateAll(t *testing.T) {
 func testEconomyShopListItemsUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(economyShopListItemColumns) == len(economyShopListItemPrimaryKeyColumns) {
+	if len(economyShopListItemAllColumns) == len(economyShopListItemPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 

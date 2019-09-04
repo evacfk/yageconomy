@@ -427,7 +427,7 @@ func testEconomyConfigsSelect(t *testing.T) {
 }
 
 var (
-	economyConfigDBTypes = map[string]string{`GuildID`: `bigint`, `Enabled`: `boolean`, `Admins`: `ARRAYbigint`, `CurrencyName`: `text`, `CurrencyNamePlural`: `text`, `CurrencySymbol`: `text`, `DailyFrequency`: `bigint`, `DailyAmount`: `bigint`, `ChatmoneyFrequency`: `bigint`, `ChatmoneyAmountMin`: `bigint`, `ChatmoneyAmountMax`: `bigint`, `AutoPlantChannels`: `ARRAYbigint`, `AutoPlantMin`: `bigint`, `AutoPlantMax`: `bigint`, `AutoPlantChance`: `numeric`, `StartBalance`: `bigint`, `FishingMaxWinAmount`: `bigint`, `FishingMinWinAmount`: `bigint`, `FishingCooldown`: `integer`, `RobFine`: `integer`, `RobCooldown`: `integer`, `HeistServerCooldown`: `integer`, `HeistFailedGamblingBanDuration`: `integer`, `HeistLastUsage`: `timestamp with time zone`}
+	economyConfigDBTypes = map[string]string{`GuildID`: `bigint`, `Enabled`: `boolean`, `Admins`: `ARRAYbigint`, `CurrencyName`: `text`, `CurrencyNamePlural`: `text`, `CurrencySymbol`: `text`, `DailyFrequency`: `bigint`, `DailyAmount`: `bigint`, `ChatmoneyFrequency`: `bigint`, `ChatmoneyAmountMin`: `bigint`, `ChatmoneyAmountMax`: `bigint`, `AutoPlantChannels`: `ARRAYbigint`, `AutoPlantMin`: `bigint`, `AutoPlantMax`: `bigint`, `AutoPlantChance`: `numeric`, `StartBalance`: `bigint`, `FishingMaxWinAmount`: `bigint`, `FishingMinWinAmount`: `bigint`, `FishingCooldown`: `integer`, `RobFine`: `integer`, `RobCooldown`: `integer`, `HeistServerCooldown`: `integer`, `HeistFailedGamblingBanDuration`: `integer`, `HeistLastUsage`: `timestamp with time zone`, `HeistFixedPayout`: `integer`, `EnabledChannels`: `ARRAYbigint`}
 	_                    = bytes.MinRead
 )
 
@@ -437,7 +437,7 @@ func testEconomyConfigsUpdate(t *testing.T) {
 	if 0 == len(economyConfigPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(economyConfigColumns) == len(economyConfigPrimaryKeyColumns) {
+	if len(economyConfigAllColumns) == len(economyConfigPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -478,7 +478,7 @@ func testEconomyConfigsUpdate(t *testing.T) {
 func testEconomyConfigsSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(economyConfigColumns) == len(economyConfigPrimaryKeyColumns) {
+	if len(economyConfigAllColumns) == len(economyConfigPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -511,11 +511,11 @@ func testEconomyConfigsSliceUpdateAll(t *testing.T) {
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(economyConfigColumns, economyConfigPrimaryKeyColumns) {
-		fields = economyConfigColumns
+	if strmangle.StringSliceMatch(economyConfigAllColumns, economyConfigPrimaryKeyColumns) {
+		fields = economyConfigAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			economyConfigColumns,
+			economyConfigAllColumns,
 			economyConfigPrimaryKeyColumns,
 		)
 	}
@@ -545,7 +545,7 @@ func testEconomyConfigsSliceUpdateAll(t *testing.T) {
 func testEconomyConfigsUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(economyConfigColumns) == len(economyConfigPrimaryKeyColumns) {
+	if len(economyConfigAllColumns) == len(economyConfigPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 

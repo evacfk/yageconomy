@@ -2,7 +2,6 @@ package yageconomy
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/jonas747/discordgo"
 	"github.com/jonas747/yageconomy/models"
@@ -53,6 +52,7 @@ type HeistSession struct {
 	MoneyLostFixed      int
 
 	BotAccount *models.EconomyUser
+	Config     *models.EconomyConfig
 }
 
 type HeistUser struct {
@@ -128,6 +128,7 @@ func NewHeist(conf *models.EconomyConfig, guildID, channelID int64, author *disc
 
 		StartsAt:  time.Now().Add(waitUntilStart),
 		CreatedAt: time.Now(),
+		Config:    conf,
 	}
 	createdHeist = true
 	activeHeists = append(activeHeists, heist)
@@ -243,13 +244,7 @@ func (hs *HeistSession) tickWaiting() {
 }
 
 func (hs *HeistSession) Start() {
-	config, err := GuildConfigOrDefault(context.Background(), hs.GuildID)
-	if err != nil {
-		logger.WithError(err).Error("failed retrieving config")
-		hs.ProgressState = HeistProgressStateEnded
-		return
-	}
-	account, _, err := GetCreateAccount(context.Background(), common.BotUser.ID, hs.GuildID, config.StartBalance)
+	account, _, err := GetCreateAccount(context.Background(), common.BotUser.ID, hs.GuildID, hs.Config.StartBalance)
 	if err != nil {
 		logger.WithError(err).Error("failed retrieving account")
 		hs.ProgressState = HeistProgressStateEnded
@@ -516,14 +511,7 @@ func inUsersSlice(users []*discordgo.User, id int64) bool {
 }
 
 func (hs *HeistSession) End() {
-	config, err := models.FindEconomyConfigG(context.Background(), hs.GuildID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			config = DefaultConfig(hs.GuildID)
-		} else {
-			return
-		}
-	}
+	config := hs.Config
 
 	hs.ProgressState = HeistProgressStateEnded
 
@@ -533,7 +521,7 @@ func (hs *HeistSession) End() {
 	if len(alive) < 1 {
 		builder.WriteString("You all died or got captured by the police, seems like you should re-evaluate your decisions.")
 		for _, v := range hs.Users {
-			_, err = common.PQ.Exec("UPDATE economy_users SET last_failed_heist = now() WHERE user_id = $2 AND guild_id = $1", config.GuildID, v.User.ID)
+			_, err := common.PQ.Exec("UPDATE economy_users SET last_failed_heist = now() WHERE user_id = $2 AND guild_id = $1", config.GuildID, v.User.ID)
 			if err == nil {
 				err = TransferMoneyWallet(context.Background(), nil, config, false, v.User.ID, common.BotUser.ID, v.Account.MoneyWallet, v.Account.MoneyWallet)
 			}
@@ -545,7 +533,11 @@ func (hs *HeistSession) End() {
 		builder.WriteString(joinUsers(alive) + " made it out alive")
 
 		botAccount := hs.BotAccount
-		profit := (botAccount.MoneyWallet + botAccount.MoneyBank)/20
+
+		profit := (botAccount.MoneyWallet + botAccount.MoneyBank) / 20
+		if config.HeistFixedPayout > 0 {
+			profit = int64(config.HeistFixedPayout)
+		}
 
 		if hs.MoneyLostPercentage >= 100 {
 			builder.WriteString(", but you lost all the money...")
@@ -566,7 +558,7 @@ func (hs *HeistSession) End() {
 
 	embed := SimpleEmbedResponse(hs.Author, "%s", builder.String())
 	embed.Title = "Heist finished"
-	_, err = common.BotSession.ChannelMessageSendEmbed(hs.ChannelID, embed)
+	_, err := common.BotSession.ChannelMessageSendEmbed(hs.ChannelID, embed)
 	if err != nil {
 		logger.WithError(err).Error("error sending message")
 	}
@@ -641,8 +633,13 @@ func (hs *HeistSession) calcEventChance(in float64) bool {
 		sumMoney += v.Account.MoneyWallet
 	}
 
+	totalPayout := float64(hs.Config.HeistFixedPayout)
+	if totalPayout < 1 {
+		totalPayout = float64(hs.BotAccount.MoneyWallet + sumMoney)
+	}
+
 	logger.Println("Ceiling: ", ceilingExt)
-	ceilingExt += (float64(sumMoney) / float64(hs.BotAccount.MoneyWallet+sumMoney)) - 0.25
+	ceilingExt += (float64(sumMoney) / totalPayout) - 0.25
 	logger.Println("Ceiling: ", ceilingExt)
 
 	if rand.Float64()*(ceilingExt+1) < in+float64(hs.ExtraEventChance) {

@@ -16,6 +16,7 @@ import (
 	"github.com/jonas747/yagpdb/common"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 	"golang.org/x/image/font/gofont/goregular"
 	"image"
 	"image/color"
@@ -90,6 +91,12 @@ func economyCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 
 		if !config.Enabled {
 			return "Economy is disabled on this server, you can enable it in the control panel.", nil
+		}
+
+		if len(config.EnabledChannels) > 0 {
+			if !common.ContainsInt64Slice(config.EnabledChannels, data.CS.ID) {
+				return "Economy disabled in this channel", nil
+			}
 		}
 
 		ctx := context.WithValue(data.Context(), CtxKeyConfig, config)
@@ -202,6 +209,10 @@ func handleMessageCreate(evt *eventsystem.EventData) {
 		return
 	}
 
+	if len(conf.EnabledChannels) > 0 && !common.ContainsInt64Slice(conf.EnabledChannels, msg.ChannelID) {
+		return
+	}
+
 	if conf.ChatmoneyAmountMax > 0 {
 		// gen chat money maybe?
 		amount := rand.Int63n(conf.ChatmoneyAmountMax-conf.ChatmoneyAmountMin) + conf.ChatmoneyAmountMin
@@ -253,7 +264,7 @@ func PlantMoney(ctx context.Context, conf *models.EconomyConfig, channelID, auth
 		password = genPlantPassword()
 	}
 
-	r, err := models.FindEconomyPickImageG(ctx, conf.GuildID)
+	r, err := getRandomPlantImage(ctx, conf.GuildID)
 	if err != nil && errors.Cause(err) != sql.ErrNoRows {
 		return err
 	}
@@ -335,6 +346,25 @@ func PlantMoney(ctx context.Context, conf *models.EconomyConfig, channelID, auth
 	err = m.InsertG(ctx, boil.Infer())
 
 	return err
+}
+
+func getRandomPlantImage(ctx context.Context, guildID int64) (*models.EconomyPickImages2, error) {
+	// models.FindEconomyPickImageG(ctx, conf.GuildID)
+
+	imgs, err := models.EconomyPickImages2s(qm.Select("id"), qm.Where("guild_id=?", guildID)).AllG(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(imgs) < 1 {
+		return nil, nil
+	}
+
+	imgID := imgs[rand.Intn(len(imgs))].ID
+
+	// get the full image
+	img, err := models.FindEconomyPickImages2G(ctx, imgID)
+	return img, err
 }
 
 var (

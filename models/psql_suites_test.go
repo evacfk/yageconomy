@@ -10,7 +10,7 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("EconomyLogs", testEconomyLogsUpsert)
 
-	t.Run("EconomyPickImages", testEconomyPickImagesUpsert)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sUpsert)
 
 	t.Run("EconomyPlants", testEconomyPlantsUpsert)
 

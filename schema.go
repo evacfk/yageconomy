@@ -39,6 +39,10 @@ ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_failed_gambling_ban_d
 `, `
 ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_last_usage TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now() - interval '10 days';
 `, `
+ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_fixed_payout INT NOT NULL DEFAULT 0;
+`, `
+ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS enabled_channels BIGINT[];
+`, `
 
 CREATE TABLE IF NOT EXISTS economy_users (
 	guild_id BIGINT NOT NULL,
@@ -153,8 +157,9 @@ CREATE TABLE IF NOT EXISTS economy_plants (
 );
 
 `, `
-CREATE TABLE IF NOT EXISTS economy_pick_images (
-	guild_id BIGINT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS economy_pick_images2 (
+	id BIGSERIAL PRIMARY KEY,
+	guild_id BIGINT NOT NULL,
 	image BYTEA NOT NULL
 );
 `, `

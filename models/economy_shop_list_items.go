@@ -56,11 +56,11 @@ var EconomyShopListItemWhere = struct {
 	Value       whereHelperstring
 	PurchasedBy whereHelperint64
 }{
-	GuildID:     whereHelperint64{field: `guild_id`},
-	LocalID:     whereHelperint64{field: `local_id`},
-	ListID:      whereHelperint64{field: `list_id`},
-	Value:       whereHelperstring{field: `value`},
-	PurchasedBy: whereHelperint64{field: `purchased_by`},
+	GuildID:     whereHelperint64{field: "\"economy_shop_list_items\".\"guild_id\""},
+	LocalID:     whereHelperint64{field: "\"economy_shop_list_items\".\"local_id\""},
+	ListID:      whereHelperint64{field: "\"economy_shop_list_items\".\"list_id\""},
+	Value:       whereHelperstring{field: "\"economy_shop_list_items\".\"value\""},
+	PurchasedBy: whereHelperint64{field: "\"economy_shop_list_items\".\"purchased_by\""},
 }
 
 // EconomyShopListItemRels is where relationship names are stored.
@@ -80,7 +80,7 @@ func (*economyShopListItemR) NewStruct() *economyShopListItemR {
 type economyShopListItemL struct{}
 
 var (
-	economyShopListItemColumns               = []string{"guild_id", "local_id", "list_id", "value", "purchased_by"}
+	economyShopListItemAllColumns            = []string{"guild_id", "local_id", "list_id", "value", "purchased_by"}
 	economyShopListItemColumnsWithoutDefault = []string{"guild_id", "local_id", "list_id", "value", "purchased_by"}
 	economyShopListItemColumnsWithDefault    = []string{}
 	economyShopListItemPrimaryKeyColumns     = []string{"guild_id", "local_id"}
@@ -257,7 +257,7 @@ func (o *EconomyShopListItem) Insert(ctx context.Context, exec boil.ContextExecu
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			economyShopListItemColumns,
+			economyShopListItemAllColumns,
 			economyShopListItemColumnsWithDefault,
 			economyShopListItemColumnsWithoutDefault,
 			nzDefaults,
@@ -331,7 +331,7 @@ func (o *EconomyShopListItem) Update(ctx context.Context, exec boil.ContextExecu
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			economyShopListItemColumns,
+			economyShopListItemAllColumns,
 			economyShopListItemPrimaryKeyColumns,
 		)
 
@@ -504,13 +504,13 @@ func (o *EconomyShopListItem) Upsert(ctx context.Context, exec boil.ContextExecu
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			economyShopListItemColumns,
+			economyShopListItemAllColumns,
 			economyShopListItemColumnsWithDefault,
 			economyShopListItemColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			economyShopListItemColumns,
+			economyShopListItemAllColumns,
 			economyShopListItemPrimaryKeyColumns,
 		)
 
@@ -632,10 +632,6 @@ func (o EconomyShopListItemSlice) DeleteAllG(ctx context.Context) (int64, error)
 
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o EconomyShopListItemSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
-	if o == nil {
-		return 0, errors.New("models: no EconomyShopListItem slice provided for delete all")
-	}
-
 	if len(o) == 0 {
 		return 0, nil
 	}

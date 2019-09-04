@@ -64,13 +64,13 @@ var EconomyPlantWhere = struct {
 	Amount    whereHelperint64
 	Password  whereHelperstring
 }{
-	MessageID: whereHelperint64{field: `message_id`},
-	ChannelID: whereHelperint64{field: `channel_id`},
-	GuildID:   whereHelperint64{field: `guild_id`},
-	CreatedAt: whereHelpertime_Time{field: `created_at`},
-	AuthorID:  whereHelperint64{field: `author_id`},
-	Amount:    whereHelperint64{field: `amount`},
-	Password:  whereHelperstring{field: `password`},
+	MessageID: whereHelperint64{field: "\"economy_plants\".\"message_id\""},
+	ChannelID: whereHelperint64{field: "\"economy_plants\".\"channel_id\""},
+	GuildID:   whereHelperint64{field: "\"economy_plants\".\"guild_id\""},
+	CreatedAt: whereHelpertime_Time{field: "\"economy_plants\".\"created_at\""},
+	AuthorID:  whereHelperint64{field: "\"economy_plants\".\"author_id\""},
+	Amount:    whereHelperint64{field: "\"economy_plants\".\"amount\""},
+	Password:  whereHelperstring{field: "\"economy_plants\".\"password\""},
 }
 
 // EconomyPlantRels is where relationship names are stored.
@@ -90,7 +90,7 @@ func (*economyPlantR) NewStruct() *economyPlantR {
 type economyPlantL struct{}
 
 var (
-	economyPlantColumns               = []string{"message_id", "channel_id", "guild_id", "created_at", "author_id", "amount", "password"}
+	economyPlantAllColumns            = []string{"message_id", "channel_id", "guild_id", "created_at", "author_id", "amount", "password"}
 	economyPlantColumnsWithoutDefault = []string{"message_id", "channel_id", "guild_id", "created_at", "author_id", "amount", "password"}
 	economyPlantColumnsWithDefault    = []string{}
 	economyPlantPrimaryKeyColumns     = []string{"message_id"}
@@ -274,7 +274,7 @@ func (o *EconomyPlant) Insert(ctx context.Context, exec boil.ContextExecutor, co
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			economyPlantColumns,
+			economyPlantAllColumns,
 			economyPlantColumnsWithDefault,
 			economyPlantColumnsWithoutDefault,
 			nzDefaults,
@@ -348,7 +348,7 @@ func (o *EconomyPlant) Update(ctx context.Context, exec boil.ContextExecutor, co
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			economyPlantColumns,
+			economyPlantAllColumns,
 			economyPlantPrimaryKeyColumns,
 		)
 
@@ -528,13 +528,13 @@ func (o *EconomyPlant) Upsert(ctx context.Context, exec boil.ContextExecutor, up
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			economyPlantColumns,
+			economyPlantAllColumns,
 			economyPlantColumnsWithDefault,
 			economyPlantColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			economyPlantColumns,
+			economyPlantAllColumns,
 			economyPlantPrimaryKeyColumns,
 		)
 
@@ -656,10 +656,6 @@ func (o EconomyPlantSlice) DeleteAllG(ctx context.Context) (int64, error) {
 
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o EconomyPlantSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
-	if o == nil {
-		return 0, errors.New("models: no EconomyPlant slice provided for delete all")
-	}
-
 	if len(o) == 0 {
 		return 0, nil
 	}

@@ -14,7 +14,7 @@ import "testing"
 func TestParent(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigs)
 	t.Run("EconomyLogs", testEconomyLogs)
-	t.Run("EconomyPickImages", testEconomyPickImages)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2s)
 	t.Run("EconomyPlants", testEconomyPlants)
 	t.Run("EconomyShopItems", testEconomyShopItems)
 	t.Run("EconomyShopListItems", testEconomyShopListItems)
@@ -25,7 +25,7 @@ func TestParent(t *testing.T) {
 func TestDelete(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsDelete)
 	t.Run("EconomyLogs", testEconomyLogsDelete)
-	t.Run("EconomyPickImages", testEconomyPickImagesDelete)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sDelete)
 	t.Run("EconomyPlants", testEconomyPlantsDelete)
 	t.Run("EconomyShopItems", testEconomyShopItemsDelete)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsDelete)
@@ -36,7 +36,7 @@ func TestDelete(t *testing.T) {
 func TestQueryDeleteAll(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsQueryDeleteAll)
 	t.Run("EconomyLogs", testEconomyLogsQueryDeleteAll)
-	t.Run("EconomyPickImages", testEconomyPickImagesQueryDeleteAll)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sQueryDeleteAll)
 	t.Run("EconomyPlants", testEconomyPlantsQueryDeleteAll)
 	t.Run("EconomyShopItems", testEconomyShopItemsQueryDeleteAll)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsQueryDeleteAll)
@@ -47,7 +47,7 @@ func TestQueryDeleteAll(t *testing.T) {
 func TestSliceDeleteAll(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsSliceDeleteAll)
 	t.Run("EconomyLogs", testEconomyLogsSliceDeleteAll)
-	t.Run("EconomyPickImages", testEconomyPickImagesSliceDeleteAll)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sSliceDeleteAll)
 	t.Run("EconomyPlants", testEconomyPlantsSliceDeleteAll)
 	t.Run("EconomyShopItems", testEconomyShopItemsSliceDeleteAll)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsSliceDeleteAll)
@@ -58,7 +58,7 @@ func TestSliceDeleteAll(t *testing.T) {
 func TestExists(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsExists)
 	t.Run("EconomyLogs", testEconomyLogsExists)
-	t.Run("EconomyPickImages", testEconomyPickImagesExists)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sExists)
 	t.Run("EconomyPlants", testEconomyPlantsExists)
 	t.Run("EconomyShopItems", testEconomyShopItemsExists)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsExists)
@@ -69,7 +69,7 @@ func TestExists(t *testing.T) {
 func TestFind(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsFind)
 	t.Run("EconomyLogs", testEconomyLogsFind)
-	t.Run("EconomyPickImages", testEconomyPickImagesFind)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sFind)
 	t.Run("EconomyPlants", testEconomyPlantsFind)
 	t.Run("EconomyShopItems", testEconomyShopItemsFind)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsFind)
@@ -80,7 +80,7 @@ func TestFind(t *testing.T) {
 func TestBind(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsBind)
 	t.Run("EconomyLogs", testEconomyLogsBind)
-	t.Run("EconomyPickImages", testEconomyPickImagesBind)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sBind)
 	t.Run("EconomyPlants", testEconomyPlantsBind)
 	t.Run("EconomyShopItems", testEconomyShopItemsBind)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsBind)
@@ -91,7 +91,7 @@ func TestBind(t *testing.T) {
 func TestOne(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsOne)
 	t.Run("EconomyLogs", testEconomyLogsOne)
-	t.Run("EconomyPickImages", testEconomyPickImagesOne)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sOne)
 	t.Run("EconomyPlants", testEconomyPlantsOne)
 	t.Run("EconomyShopItems", testEconomyShopItemsOne)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsOne)
@@ -102,7 +102,7 @@ func TestOne(t *testing.T) {
 func TestAll(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsAll)
 	t.Run("EconomyLogs", testEconomyLogsAll)
-	t.Run("EconomyPickImages", testEconomyPickImagesAll)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sAll)
 	t.Run("EconomyPlants", testEconomyPlantsAll)
 	t.Run("EconomyShopItems", testEconomyShopItemsAll)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsAll)
@@ -113,7 +113,7 @@ func TestAll(t *testing.T) {
 func TestCount(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsCount)
 	t.Run("EconomyLogs", testEconomyLogsCount)
-	t.Run("EconomyPickImages", testEconomyPickImagesCount)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sCount)
 	t.Run("EconomyPlants", testEconomyPlantsCount)
 	t.Run("EconomyShopItems", testEconomyShopItemsCount)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsCount)
@@ -126,8 +126,8 @@ func TestInsert(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsInsertWhitelist)
 	t.Run("EconomyLogs", testEconomyLogsInsert)
 	t.Run("EconomyLogs", testEconomyLogsInsertWhitelist)
-	t.Run("EconomyPickImages", testEconomyPickImagesInsert)
-	t.Run("EconomyPickImages", testEconomyPickImagesInsertWhitelist)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sInsert)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sInsertWhitelist)
 	t.Run("EconomyPlants", testEconomyPlantsInsert)
 	t.Run("EconomyPlants", testEconomyPlantsInsertWhitelist)
 	t.Run("EconomyShopItems", testEconomyShopItemsInsert)
@@ -183,7 +183,7 @@ func TestToManyRemove(t *testing.T) {}
 func TestReload(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsReload)
 	t.Run("EconomyLogs", testEconomyLogsReload)
-	t.Run("EconomyPickImages", testEconomyPickImagesReload)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sReload)
 	t.Run("EconomyPlants", testEconomyPlantsReload)
 	t.Run("EconomyShopItems", testEconomyShopItemsReload)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsReload)
@@ -194,7 +194,7 @@ func TestReload(t *testing.T) {
 func TestReloadAll(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsReloadAll)
 	t.Run("EconomyLogs", testEconomyLogsReloadAll)
-	t.Run("EconomyPickImages", testEconomyPickImagesReloadAll)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sReloadAll)
 	t.Run("EconomyPlants", testEconomyPlantsReloadAll)
 	t.Run("EconomyShopItems", testEconomyShopItemsReloadAll)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsReloadAll)
@@ -205,7 +205,7 @@ func TestReloadAll(t *testing.T) {
 func TestSelect(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsSelect)
 	t.Run("EconomyLogs", testEconomyLogsSelect)
-	t.Run("EconomyPickImages", testEconomyPickImagesSelect)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sSelect)
 	t.Run("EconomyPlants", testEconomyPlantsSelect)
 	t.Run("EconomyShopItems", testEconomyShopItemsSelect)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsSelect)
@@ -216,7 +216,7 @@ func TestSelect(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsUpdate)
 	t.Run("EconomyLogs", testEconomyLogsUpdate)
-	t.Run("EconomyPickImages", testEconomyPickImagesUpdate)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sUpdate)
 	t.Run("EconomyPlants", testEconomyPlantsUpdate)
 	t.Run("EconomyShopItems", testEconomyShopItemsUpdate)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsUpdate)
@@ -227,7 +227,7 @@ func TestUpdate(t *testing.T) {
 func TestSliceUpdateAll(t *testing.T) {
 	t.Run("EconomyConfigs", testEconomyConfigsSliceUpdateAll)
 	t.Run("EconomyLogs", testEconomyLogsSliceUpdateAll)
-	t.Run("EconomyPickImages", testEconomyPickImagesSliceUpdateAll)
+	t.Run("EconomyPickImages2s", testEconomyPickImages2sSliceUpdateAll)
 	t.Run("EconomyPlants", testEconomyPlantsSliceUpdateAll)
 	t.Run("EconomyShopItems", testEconomyShopItemsSliceUpdateAll)
 	t.Run("EconomyShopListItems", testEconomyShopListItemsSliceUpdateAll)

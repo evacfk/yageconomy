@@ -437,7 +437,7 @@ func testEconomyWaifuItemsUpdate(t *testing.T) {
 	if 0 == len(economyWaifuItemPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(economyWaifuItemColumns) == len(economyWaifuItemPrimaryKeyColumns) {
+	if len(economyWaifuItemAllColumns) == len(economyWaifuItemPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -478,7 +478,7 @@ func testEconomyWaifuItemsUpdate(t *testing.T) {
 func testEconomyWaifuItemsSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(economyWaifuItemColumns) == len(economyWaifuItemPrimaryKeyColumns) {
+	if len(economyWaifuItemAllColumns) == len(economyWaifuItemPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
@@ -511,11 +511,11 @@ func testEconomyWaifuItemsSliceUpdateAll(t *testing.T) {
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(economyWaifuItemColumns, economyWaifuItemPrimaryKeyColumns) {
-		fields = economyWaifuItemColumns
+	if strmangle.StringSliceMatch(economyWaifuItemAllColumns, economyWaifuItemPrimaryKeyColumns) {
+		fields = economyWaifuItemAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			economyWaifuItemColumns,
+			economyWaifuItemAllColumns,
 			economyWaifuItemPrimaryKeyColumns,
 		)
 	}
@@ -545,7 +545,7 @@ func testEconomyWaifuItemsSliceUpdateAll(t *testing.T) {
 func testEconomyWaifuItemsUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(economyWaifuItemColumns) == len(economyWaifuItemPrimaryKeyColumns) {
+	if len(economyWaifuItemAllColumns) == len(economyWaifuItemPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 

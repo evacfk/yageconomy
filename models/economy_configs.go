@@ -48,6 +48,8 @@ type EconomyConfig struct {
 	HeistServerCooldown            int              `boil:"heist_server_cooldown" json:"heist_server_cooldown" toml:"heist_server_cooldown" yaml:"heist_server_cooldown"`
 	HeistFailedGamblingBanDuration int              `boil:"heist_failed_gambling_ban_duration" json:"heist_failed_gambling_ban_duration" toml:"heist_failed_gambling_ban_duration" yaml:"heist_failed_gambling_ban_duration"`
 	HeistLastUsage                 time.Time        `boil:"heist_last_usage" json:"heist_last_usage" toml:"heist_last_usage" yaml:"heist_last_usage"`
+	HeistFixedPayout               int              `boil:"heist_fixed_payout" json:"heist_fixed_payout" toml:"heist_fixed_payout" yaml:"heist_fixed_payout"`
+	EnabledChannels                types.Int64Array `boil:"enabled_channels" json:"enabled_channels,omitempty" toml:"enabled_channels" yaml:"enabled_channels,omitempty"`
 
 	R *economyConfigR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L economyConfigL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -78,6 +80,8 @@ var EconomyConfigColumns = struct {
 	HeistServerCooldown            string
 	HeistFailedGamblingBanDuration string
 	HeistLastUsage                 string
+	HeistFixedPayout               string
+	EnabledChannels                string
 }{
 	GuildID:                        "guild_id",
 	Enabled:                        "enabled",
@@ -103,6 +107,8 @@ var EconomyConfigColumns = struct {
 	HeistServerCooldown:            "heist_server_cooldown",
 	HeistFailedGamblingBanDuration: "heist_failed_gambling_ban_duration",
 	HeistLastUsage:                 "heist_last_usage",
+	HeistFixedPayout:               "heist_fixed_payout",
+	EnabledChannels:                "enabled_channels",
 }
 
 // Generated where
@@ -233,31 +239,35 @@ var EconomyConfigWhere = struct {
 	HeistServerCooldown            whereHelperint
 	HeistFailedGamblingBanDuration whereHelperint
 	HeistLastUsage                 whereHelpertime_Time
+	HeistFixedPayout               whereHelperint
+	EnabledChannels                whereHelpertypes_Int64Array
 }{
-	GuildID:                        whereHelperint64{field: `guild_id`},
-	Enabled:                        whereHelperbool{field: `enabled`},
-	Admins:                         whereHelpertypes_Int64Array{field: `admins`},
-	CurrencyName:                   whereHelperstring{field: `currency_name`},
-	CurrencyNamePlural:             whereHelperstring{field: `currency_name_plural`},
-	CurrencySymbol:                 whereHelperstring{field: `currency_symbol`},
-	DailyFrequency:                 whereHelperint64{field: `daily_frequency`},
-	DailyAmount:                    whereHelperint64{field: `daily_amount`},
-	ChatmoneyFrequency:             whereHelperint64{field: `chatmoney_frequency`},
-	ChatmoneyAmountMin:             whereHelperint64{field: `chatmoney_amount_min`},
-	ChatmoneyAmountMax:             whereHelperint64{field: `chatmoney_amount_max`},
-	AutoPlantChannels:              whereHelpertypes_Int64Array{field: `auto_plant_channels`},
-	AutoPlantMin:                   whereHelperint64{field: `auto_plant_min`},
-	AutoPlantMax:                   whereHelperint64{field: `auto_plant_max`},
-	AutoPlantChance:                whereHelpertypes_Decimal{field: `auto_plant_chance`},
-	StartBalance:                   whereHelperint64{field: `start_balance`},
-	FishingMaxWinAmount:            whereHelperint64{field: `fishing_max_win_amount`},
-	FishingMinWinAmount:            whereHelperint64{field: `fishing_min_win_amount`},
-	FishingCooldown:                whereHelperint{field: `fishing_cooldown`},
-	RobFine:                        whereHelperint{field: `rob_fine`},
-	RobCooldown:                    whereHelperint{field: `rob_cooldown`},
-	HeistServerCooldown:            whereHelperint{field: `heist_server_cooldown`},
-	HeistFailedGamblingBanDuration: whereHelperint{field: `heist_failed_gambling_ban_duration`},
-	HeistLastUsage:                 whereHelpertime_Time{field: `heist_last_usage`},
+	GuildID:                        whereHelperint64{field: "\"economy_configs\".\"guild_id\""},
+	Enabled:                        whereHelperbool{field: "\"economy_configs\".\"enabled\""},
+	Admins:                         whereHelpertypes_Int64Array{field: "\"economy_configs\".\"admins\""},
+	CurrencyName:                   whereHelperstring{field: "\"economy_configs\".\"currency_name\""},
+	CurrencyNamePlural:             whereHelperstring{field: "\"economy_configs\".\"currency_name_plural\""},
+	CurrencySymbol:                 whereHelperstring{field: "\"economy_configs\".\"currency_symbol\""},
+	DailyFrequency:                 whereHelperint64{field: "\"economy_configs\".\"daily_frequency\""},
+	DailyAmount:                    whereHelperint64{field: "\"economy_configs\".\"daily_amount\""},
+	ChatmoneyFrequency:             whereHelperint64{field: "\"economy_configs\".\"chatmoney_frequency\""},
+	ChatmoneyAmountMin:             whereHelperint64{field: "\"economy_configs\".\"chatmoney_amount_min\""},
+	ChatmoneyAmountMax:             whereHelperint64{field: "\"economy_configs\".\"chatmoney_amount_max\""},
+	AutoPlantChannels:              whereHelpertypes_Int64Array{field: "\"economy_configs\".\"auto_plant_channels\""},
+	AutoPlantMin:                   whereHelperint64{field: "\"economy_configs\".\"auto_plant_min\""},
+	AutoPlantMax:                   whereHelperint64{field: "\"economy_configs\".\"auto_plant_max\""},
+	AutoPlantChance:                whereHelpertypes_Decimal{field: "\"economy_configs\".\"auto_plant_chance\""},
+	StartBalance:                   whereHelperint64{field: "\"economy_configs\".\"start_balance\""},
+	FishingMaxWinAmount:            whereHelperint64{field: "\"economy_configs\".\"fishing_max_win_amount\""},
+	FishingMinWinAmount:            whereHelperint64{field: "\"economy_configs\".\"fishing_min_win_amount\""},
+	FishingCooldown:                whereHelperint{field: "\"economy_configs\".\"fishing_cooldown\""},
+	RobFine:                        whereHelperint{field: "\"economy_configs\".\"rob_fine\""},
+	RobCooldown:                    whereHelperint{field: "\"economy_configs\".\"rob_cooldown\""},
+	HeistServerCooldown:            whereHelperint{field: "\"economy_configs\".\"heist_server_cooldown\""},
+	HeistFailedGamblingBanDuration: whereHelperint{field: "\"economy_configs\".\"heist_failed_gambling_ban_duration\""},
+	HeistLastUsage:                 whereHelpertime_Time{field: "\"economy_configs\".\"heist_last_usage\""},
+	HeistFixedPayout:               whereHelperint{field: "\"economy_configs\".\"heist_fixed_payout\""},
+	EnabledChannels:                whereHelpertypes_Int64Array{field: "\"economy_configs\".\"enabled_channels\""},
 }
 
 // EconomyConfigRels is where relationship names are stored.
@@ -277,9 +287,9 @@ func (*economyConfigR) NewStruct() *economyConfigR {
 type economyConfigL struct{}
 
 var (
-	economyConfigColumns               = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown", "heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage"}
-	economyConfigColumnsWithoutDefault = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown"}
-	economyConfigColumnsWithDefault    = []string{"heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage"}
+	economyConfigAllColumns            = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown", "heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage", "heist_fixed_payout", "enabled_channels"}
+	economyConfigColumnsWithoutDefault = []string{"guild_id", "enabled", "admins", "currency_name", "currency_name_plural", "currency_symbol", "daily_frequency", "daily_amount", "chatmoney_frequency", "chatmoney_amount_min", "chatmoney_amount_max", "auto_plant_channels", "auto_plant_min", "auto_plant_max", "auto_plant_chance", "start_balance", "fishing_max_win_amount", "fishing_min_win_amount", "fishing_cooldown", "rob_fine", "rob_cooldown", "enabled_channels"}
+	economyConfigColumnsWithDefault    = []string{"heist_server_cooldown", "heist_failed_gambling_ban_duration", "heist_last_usage", "heist_fixed_payout"}
 	economyConfigPrimaryKeyColumns     = []string{"guild_id"}
 )
 
@@ -454,7 +464,7 @@ func (o *EconomyConfig) Insert(ctx context.Context, exec boil.ContextExecutor, c
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			economyConfigColumns,
+			economyConfigAllColumns,
 			economyConfigColumnsWithDefault,
 			economyConfigColumnsWithoutDefault,
 			nzDefaults,
@@ -528,7 +538,7 @@ func (o *EconomyConfig) Update(ctx context.Context, exec boil.ContextExecutor, c
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			economyConfigColumns,
+			economyConfigAllColumns,
 			economyConfigPrimaryKeyColumns,
 		)
 
@@ -701,13 +711,13 @@ func (o *EconomyConfig) Upsert(ctx context.Context, exec boil.ContextExecutor, u
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			economyConfigColumns,
+			economyConfigAllColumns,
 			economyConfigColumnsWithDefault,
 			economyConfigColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			economyConfigColumns,
+			economyConfigAllColumns,
 			economyConfigPrimaryKeyColumns,
 		)
 
@@ -829,10 +839,6 @@ func (o EconomyConfigSlice) DeleteAllG(ctx context.Context) (int64, error) {
 
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o EconomyConfigSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
-	if o == nil {
-		return 0, errors.New("models: no EconomyConfig slice provided for delete all")
-	}
-
 	if len(o) == 0 {
 		return 0, nil
 	}
