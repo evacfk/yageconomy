@@ -93,6 +93,12 @@ func economyCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 			return "Economy is disabled on this server, you can enable it in the control panel.", nil
 		}
 
+		if len(config.EnabledChannels) > 0 {
+			if !common.ContainsInt64Slice(config.EnabledChannels, data.CS.ID) {
+				return "Economy disabled in this channel", nil
+			}
+		}
+
 		ctx := context.WithValue(data.Context(), CtxKeyConfig, config)
 		account, _, err := GetCreateAccount(ctx, data.Msg.Author.ID, data.GS.ID, config.StartBalance)
 		if err != nil {
@@ -200,6 +206,10 @@ func handleMessageCreate(evt *eventsystem.EventData) {
 	}
 
 	if !conf.Enabled {
+		return
+	}
+
+	if len(conf.EnabledChannels) > 0 && !common.ContainsInt64Slice(conf.EnabledChannels, msg.ChannelID) {
 		return
 	}
 

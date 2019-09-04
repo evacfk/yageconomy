@@ -427,7 +427,7 @@ func testEconomyConfigsSelect(t *testing.T) {
 }
 
 var (
-	economyConfigDBTypes = map[string]string{`GuildID`: `bigint`, `Enabled`: `boolean`, `Admins`: `ARRAYbigint`, `CurrencyName`: `text`, `CurrencyNamePlural`: `text`, `CurrencySymbol`: `text`, `DailyFrequency`: `bigint`, `DailyAmount`: `bigint`, `ChatmoneyFrequency`: `bigint`, `ChatmoneyAmountMin`: `bigint`, `ChatmoneyAmountMax`: `bigint`, `AutoPlantChannels`: `ARRAYbigint`, `AutoPlantMin`: `bigint`, `AutoPlantMax`: `bigint`, `AutoPlantChance`: `numeric`, `StartBalance`: `bigint`, `FishingMaxWinAmount`: `bigint`, `FishingMinWinAmount`: `bigint`, `FishingCooldown`: `integer`, `RobFine`: `integer`, `RobCooldown`: `integer`, `HeistServerCooldown`: `integer`, `HeistFailedGamblingBanDuration`: `integer`, `HeistLastUsage`: `timestamp with time zone`, `HeistFixedPayout`: `integer`}
+	economyConfigDBTypes = map[string]string{`GuildID`: `bigint`, `Enabled`: `boolean`, `Admins`: `ARRAYbigint`, `CurrencyName`: `text`, `CurrencyNamePlural`: `text`, `CurrencySymbol`: `text`, `DailyFrequency`: `bigint`, `DailyAmount`: `bigint`, `ChatmoneyFrequency`: `bigint`, `ChatmoneyAmountMin`: `bigint`, `ChatmoneyAmountMax`: `bigint`, `AutoPlantChannels`: `ARRAYbigint`, `AutoPlantMin`: `bigint`, `AutoPlantMax`: `bigint`, `AutoPlantChance`: `numeric`, `StartBalance`: `bigint`, `FishingMaxWinAmount`: `bigint`, `FishingMinWinAmount`: `bigint`, `FishingCooldown`: `integer`, `RobFine`: `integer`, `RobCooldown`: `integer`, `HeistServerCooldown`: `integer`, `HeistFailedGamblingBanDuration`: `integer`, `HeistLastUsage`: `timestamp with time zone`, `HeistFixedPayout`: `integer`, `EnabledChannels`: `ARRAYbigint`}
 	_                    = bytes.MinRead
 )
 

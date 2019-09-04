@@ -41,6 +41,8 @@ ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_last_usage TIMESTAMP 
 `, `
 ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS heist_fixed_payout INT NOT NULL DEFAULT 0;
 `, `
+ALTER TABLE economy_configs ADD COLUMN IF NOT EXISTS enabled_channels BIGINT[];
+`, `
 
 CREATE TABLE IF NOT EXISTS economy_users (
 	guild_id BIGINT NOT NULL,

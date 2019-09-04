@@ -23,6 +23,7 @@
                 <div class="card-body">                        
                     <div class="row">
                         <div class="col">
+                            <h4>Currency</h4>
                             <div class="form-group">
                                 <label>Currency name</label>
                                 <input type="text" name="CurrencyName" class="form-control" value="{{.PluginSettings.CurrencyName}}">
@@ -37,6 +38,7 @@
                             </div>
                             <hr>
 
+                            <h4>Daily</h4>
                             <div class="form-group">
                                 <label>Daily cooldown (minutes)</label>
                                 <input type="number" name="DailyFrequency" class="form-control" value="{{.PluginSettings.DailyFrequency}}">
@@ -45,8 +47,9 @@
                                 <label>Daily amount</label>
                                 <input type="number" name="DailyAmount" class="form-control" value="{{.PluginSettings.DailyAmount}}">
                             </div>
-
                             <hr>
+
+                            <h4>Auto Plant</h4>
                             <div class="form-group">
                                 <label>Auto-plant channels</label>
                                 <select name="AutoPlantChannels" class="multiselect form-control" multiple="multiple" data-plugin-multiselect>
@@ -68,6 +71,7 @@
 
                             <hr>
                             
+                            <h4>Heist</h4>
                             <div class="form-group">
                                 <label>Failed heist gambling lockdown (minutes)</label>
                                 <input type="number" name="HeistFailedGamblingBanDuration" class="form-control" value="{{.PluginSettings.HeistFailedGamblingBanDuration}}">
@@ -85,6 +89,7 @@
                             <hr>
                         </div>
                         <div class="col">
+                            <h4>Misc</h4>
                             <div class="form-group">
                                 <label>Start balance</label>
                                 <input type="number" name="StartBalance" class="form-control" value="{{.PluginSettings.StartBalance}}">
@@ -95,9 +100,17 @@
                                     {{roleOptionsMulti .ActiveGuild.Roles nil .PluginSettings.Admins}}
                                 </select>
                             </div>
+
+                            <div class="form-group">
+                                <label>Economy enabled in... (blank for all channels)</label>
+                                <select name="EnabledChannels" class="multiselect form-control" multiple="multiple" data-plugin-multiselect>
+                                    {{textChannelOptionsMulti .ActiveGuild.Channels .PluginSettings.EnabledChannels}}
+                                </select>
+                            </div>
                             
                             <hr>
 
+                            <h4>Chat money</h4>
                             <div class="form-group">
                                 <label>Chat money Cooldown (seconds)</label>
                                 <input type="number" name="ChatmoneyFrequency" class="form-control" value="{{.PluginSettings.ChatmoneyFrequency}}">
@@ -113,6 +126,7 @@
 
                             <hr>
 
+                            <h4>Rob</h4>
                             <div class="form-group">
                                 <label>Rob fine amount (% of money in wallet)</label>
                                 <input type="number" name="RobFine" class="form-control" value="{{.PluginSettings.RobFine}}">
@@ -124,6 +138,7 @@
 
                             <hr>
 
+                            <h4>Fishing</h4>
                             <div class="form-group">
                                 <label>Fishing cooldown (minutes)</label>
                                 <input type="number" name="FishingCooldown" class="form-control" value="{{.PluginSettings.FishingCooldown}}">

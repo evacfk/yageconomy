@@ -23,6 +23,7 @@ import (
 type PostConfigForm struct {
 	Enabled                        bool
 	Admins                         []int64 `valid:"role,true"`
+	EnabledChannels                []int64 `valid:"channel,true"`
 	CurrencyName                   string  `valid:",1,50"`
 	CurrencyNamePlural             string  `valid:",1,50"`
 	CurrencySymbol                 string  `valid:",1,50"`
@@ -50,6 +51,7 @@ func (p PostConfigForm) DBModel() *models.EconomyConfig {
 	return &models.EconomyConfig{
 		Enabled:                        p.Enabled,
 		Admins:                         p.Admins,
+		EnabledChannels:                p.EnabledChannels,
 		CurrencyName:                   p.CurrencyName,
 		CurrencyNamePlural:             p.CurrencyNamePlural,
 		CurrencySymbol:                 p.CurrencySymbol,
