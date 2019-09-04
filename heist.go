@@ -533,7 +533,8 @@ func (hs *HeistSession) End() {
 		builder.WriteString(joinUsers(alive) + " made it out alive")
 
 		botAccount := hs.BotAccount
-		profit := botAccount.MoneyWallet + botAccount.MoneyBank
+
+		profit := (botAccount.MoneyWallet + botAccount.MoneyBank) / 20
 		if config.HeistFixedPayout > 0 {
 			profit = int64(config.HeistFixedPayout)
 		}
@@ -601,7 +602,7 @@ func (hs *HeistSession) finishHeistUser(config *models.EconomyConfig, v *HeistUs
 		if v.Injured {
 			// take away 10% if they're injured
 			win = int64(float64(win) * 0.9)
-			extraStr = "(injured, -10%)"
+			extraStr = "(injured, -33%)"
 		}
 
 		builder.WriteString(fmt.Sprintf("%d%s", win, extraStr))

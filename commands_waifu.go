@@ -37,7 +37,7 @@ var (
 					offset := (newPage - 1) * 10
 					items, err := models.EconomyUsers(
 						models.EconomyUserWhere.GuildID.EQ(parsed.GS.ID),
-						qm.OrderBy("waifu_item_worth desc"),
+						qm.OrderBy("waifu_item_worth + waifu_last_claim_amount + waifu_extra_worth desc"),
 						qm.Limit(10),
 						qm.Offset(offset),
 					).AllG(context.Background())
