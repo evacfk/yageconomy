@@ -4,20 +4,21 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/jonas747/dcmd"
 	"github.com/jonas747/discordgo"
+	"github.com/jonas747/retryableredis"
 	"github.com/jonas747/yageconomy/models"
 	"github.com/jonas747/yagpdb/bot"
 	"github.com/jonas747/yagpdb/bot/paginatedmessages"
 	"github.com/jonas747/yagpdb/commands"
 	"github.com/jonas747/yagpdb/common"
 	"github.com/lib/pq"
-	"github.com/mediocregopher/radix"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
-	"strconv"
-	"strings"
 )
 
 var (
@@ -486,7 +487,7 @@ var (
 
 			// check cooldown
 			var cdResp string
-			err := common.RedisPool.Do(radix.Cmd(&cdResp, "SET", fmt.Sprintf("economy_affinity_cd:%d:%d", parsed.GS.ID, u.ID), "1", "EX", "1800", "NX"))
+			err := common.RedisPool.Do(retryableredis.Cmd(&cdResp, "SET", fmt.Sprintf("economy_affinity_cd:%d:%d", parsed.GS.ID, u.ID), "1", "EX", "1800", "NX"))
 			if err != nil {
 				return nil, err
 			}
