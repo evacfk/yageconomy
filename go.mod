@@ -1,4 +1,4 @@
-module github.com/jonas747/yageconomy
+module github.com/evacfk/yageconomy
 
 go 1.13
 
