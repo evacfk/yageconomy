@@ -266,7 +266,7 @@ func (hs *HeistSession) updateWaitingMessage() {
 	embed := SimpleEmbedResponse(hs.Author, "A heist is being set up by **%s#%s**\nIt's scheduled to start in `%s` at `%s` UTC",
 		hs.Author.Username, hs.Author.Discriminator, common.HumanizeDuration(precision, timeUntilStart), hs.StartsAt.UTC().Format(time.Kitchen))
 
-	embed.Description += "\n\nYou can join the heist by reacting below, doing so will put all your money in your wallet at stake.\nThe more money and the more people the higher the chance of succeeding."
+	embed.Description += "\n\nYou can join the heist by reacting below, doing so will put all of the wondercoins in your wallet at stake.\nThe more wondercoins and the more people the higher the chance of succeeding. "
 
 	embed.Title = "Heist being set up"
 
@@ -519,7 +519,7 @@ func (hs *HeistSession) End() {
 
 	alive := hs.aliveUsers()
 	if len(alive) < 1 {
-		builder.WriteString("You all died or got captured by the police, seems like you should re-evaluate your decisions.")
+		builder.WriteString("You all died or got captured by the police, seems like you should come back more prepared if you want to heist the Wondercasino.")
 		for _, v := range hs.Users {
 			_, err := common.PQ.Exec("UPDATE economy_users SET last_failed_heist = now() WHERE user_id = $2 AND guild_id = $1", config.GuildID, v.User.ID)
 			if err == nil {
@@ -540,7 +540,7 @@ func (hs *HeistSession) End() {
 		}
 
 		if hs.MoneyLostPercentage >= 100 {
-			builder.WriteString(", but you lost all the money...")
+			builder.WriteString(", but you lost all the wondercoins...")
 		} else {
 			multiplier := 1 - float64(hs.MoneyLostPercentage)/100
 			profit = int64(multiplier * float64(profit))
@@ -600,9 +600,9 @@ func (hs *HeistSession) finishHeistUser(config *models.EconomyConfig, v *HeistUs
 
 		extraStr := ""
 		if v.Injured {
-			// take away 10% if they're injured
+			// take away 60% if they're injured
 			win = int64(float64(win) * 0.9)
-			extraStr = "(injured, -33%)"
+			extraStr = "(injured, -60%)"
 		}
 
 		builder.WriteString(fmt.Sprintf("%d%s", win, extraStr))
