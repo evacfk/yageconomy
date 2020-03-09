@@ -6,38 +6,38 @@ import (
 
 var (
 	heistEvtHostageHero = &HeistEventChance{
-		Chance: 0.1,
+		Chance: 0.25,
 		Inner: &HeistMemberEvent{
 			Message:        "A hostage played hero and started shooting at your team.",
 			DeadMembersMin: 1,
-			DeadMembersMax: 20,
+			DeadMembersMax: 3,
 		},
 	}
 	
-	heistEvtEvacMad = &HeistEventChance{
-		Chance: 0.5,
+	heistEvtBetrayal = &HeistEventChance{
+		Chance: 0.35,
 		Inner: &HeistMemberEvent{
-			Message:        "Someone pinged evac, he pressed the ban button.",
-			DeadMembersMin: 1,
-			DeadMembersMax: 1,
+			Message:        "One of your heist members got greedy and tried to take you out for more money, he was also killed.",
+			DeadMembersMin: 2,
+			DeadMembersMax: 2,
 		},
 	}
 
 	heistEvtTripSpillMoney = &HeistEventChance{
-		Chance: 0.25,
+		Chance: 0.5,
 		Inner: &HeistMoneyEvent{
 			Message:             "One of your members tripped, spilling some money in the process.",
 			MoneyLossPercentMin: 5,
-			MoneyLossPercentMax: 100,
+			MoneyLossPercentMax: 69,
 		},
 	}
 
 	heistEvtTripInjury = &HeistEventChance{
 		Chance: 0.25,
 		Inner: &HeistMemberEvent{
-			Message:           "Evac saw your crew post a gambling command in cuddle, they were fined.",
+			Message:           "Someone walked into tripwire and set off an explosion!",
 			InjuredMembersMin: 1,
-			InjuredMembersMax: 20,
+			InjuredMembersMax: 10,
 		},
 	}
 )
@@ -45,8 +45,8 @@ var (
 var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 	HeistProgressStateStarting: []HeistEvent{
 		&BasicHeistEvent{
-			Message:              "So uh, you're charging into the bank alone huh? Well you better get ready because you're starting now!",
-			MessagePluralMembers: "Alright guys, check your guns. We are storming into the bank through all entrances. Let's get the cash and get out before the cops get here.",
+			Message:              "So uh, you're charging into the Wonderbank alone huh? Well you better get ready because you're starting now!",
+			MessagePluralMembers: "Alright guys, check your guns. We are storming into the bank through all entrances. Let's get the wondercoins and get out before the cops get here.",
 		},
 	},
 	HeistProgressStateInvading: []HeistEvent{
@@ -62,34 +62,34 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			},
 		},
 		heistEvtHostageHero,
-		heistEvtEvacMad,
+		heistEvtBetrayal,
 		heistEvtTripInjury,
 	},
 	HeistProgressStateCollecting: []HeistEvent{
 		&BasicHeistEvent{
-			Message: "You've found the money and started collecting the dough.",
+			Message: "You've found the stash of wondercoins and started collecting the dough.",
 		},
 
 		&HeistEventChance{
 			Chance: 0.5,
 			Inner: &HeistMoneyEvent{
-				Message:             "One of your bags ripped open and there's now money everywhere.",
+				Message:             "One of your bags ripped open and there's now wondercoins everywhere.",
 				MoneyLossPercentMin: 10,
 				MoneyLossPercentMax: 100,
 			},
 		},
 
 		&HeistEventChance{
-			Chance: 0.1,
+			Chance: 0.25,
 			Inner: &HeistMemberEvent{
-				Message:        "One of your crew members tripped because of the stress then hit their head and died. Can we get an F in chat?",
+				Message:        "Someone walked into tripwire and set off an explosion near your team!",
 				DeadMembersMin: 1,
-				DeadMembersMax: 20,
+				DeadMembersMax: 4,
 			},
 		},
 
 		&HeistEventChance{
-			Chance: 0.1,
+			Chance: 0.5,
 			Inner: &HeistMemberEvent{
 				Message:           "One of your crew members tripped because of the stress and injured themselves.",
 				InjuredMembersMin: 1,
@@ -97,7 +97,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 			},
 		},
 		heistEvtHostageHero,
-		heistEvtEvacMad,
+		heistEvtBetrayal,
 	},
 	HeistProgressStateLeaving: []HeistEvent{
 		&BasicHeistEvent{
@@ -111,7 +111,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 				Amount:  60,
 			},
 		},
-		heistEvtEvacMad,
+		heistEvtBetrayal,
 		heistEvtHostageHero,
 		heistEvtTripInjury,
 	},
@@ -121,9 +121,9 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 		},
 		heistEvtTripSpillMoney,
 		&HeistEventChance{
-			Chance: 0.25,
+			Chance: 0.4,
 			Inner: &HeistMemberEvent{
-				Message:           "There's a blockade up ahead, giving you all kinds of trouble!",
+				Message:           "There's a blockade up ahead, along with snipers on the roof giving you all kinds of trouble!",
 				DeadMembersMin:    1,
 				DeadMembersMax:    5,
 				InjuredMembersMin: 1,
