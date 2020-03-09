@@ -91,7 +91,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 		&HeistEventChance{
 			Chance: 0.5,
 			Inner: &HeistMemberEvent{
-				Message:           "One of your crew members tripped because of the stress and injured themselves.",
+				Message:           "A sniper starts shooting at your team through the windows, you're taking too long!",
 				InjuredMembersMin: 1,
 				InjuredMembersMax: 20,
 			},
