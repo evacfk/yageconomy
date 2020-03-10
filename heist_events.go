@@ -35,7 +35,7 @@ var (
 	heistEvtTripInjury = &HeistEventChance{
 		Chance: 0.25,
 		Inner: &HeistMemberEvent{
-			Message:           "Someone walked into tripwire and set off an explosion!",
+			Message:           "A hostage ran into your team with a knife and started slashing!",
 			InjuredMembersMin: 1,
 			InjuredMembersMax: 10,
 		},
@@ -80,7 +80,7 @@ var OrderedHeistEvents = map[HeistProgressState][]HeistEvent{
 		},
 
 		&HeistEventChance{
-			Chance: 0.25,
+			Chance: 0.15,
 			Inner: &HeistMemberEvent{
 				Message:        "Someone walked into tripwire and set off an explosion near your team!",
 				DeadMembersMin: 1,
