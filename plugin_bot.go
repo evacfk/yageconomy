@@ -52,26 +52,25 @@ const (
 func (p *Plugin) AddCommands() {
 
 	// commands.AddRootCommands(cmds...)
-	//commands.AddRootCommandsWithMiddlewares(p, ...)
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, CoreCommands...)
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, CoreAdminCommands...)
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, gamblingCmdMiddleware, moneyAlteringMW}, GameCommands...)
+	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware}, CoreCommands...)
+	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, CoreAdminCommands...)
+	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware, gamblingCmdMiddleware, moneyAlteringMW}, GameCommands...)
 
 	waifuContainer := commands.CommandSystem.Root.Sub("waifu", "wf")
 	waifuContainer.NotFound = commands.CommonContainerNotFoundHandler(waifuContainer, "")
 
 	waifuContainer.AddMidlewares(economyCmdMiddleware)
 
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware},
+	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware},
 		WaifuCmdTop, WaifuCmdInfo, WaifuCmdAffinity)
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, moneyAlteringMW},
+	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware, moneyAlteringMW},
 		WaifuCmdClaim, WaifuCmdReset, WaifuCmdTransfer, WaifuCmdDivorce, WaifuCmdGift)
 
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware},
+	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware},
 		WaifuShopAdd, WaifuShopEdit, WaifuCmdDel)
 
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, moneyAlteringMW}, ShopCommands...)
-	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, ShopAdminCommands...)
+	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware, moneyAlteringMW}, ShopCommands...)
+	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, ShopAdminCommands...)
 }
 
 func (p *Plugin) BotInit() {
