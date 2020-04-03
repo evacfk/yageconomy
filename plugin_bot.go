@@ -52,7 +52,7 @@ const (
 func (p *Plugin) AddCommands() {
 
 	// commands.AddRootCommands(cmds...)
-	commands.AddRootCommandsWithMiddlewares(p, ...)
+	commands.AddRootCommandsWithMiddlewares(p, ...
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware}, CoreCommands...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, CoreAdminCommands...)
 	commands.AddRootCommandsWithMiddlewares([]dcmd.MiddleWareFunc{economyCmdMiddleware, gamblingCmdMiddleware, moneyAlteringMW}, GameCommands...)
