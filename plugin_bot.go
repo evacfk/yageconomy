@@ -113,7 +113,7 @@ func economyCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 func economyAdminMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 	return func(data *dcmd.Data) (interface{}, error) {
 		conf := CtxConfig(data.Context())
-		ms := commands.ContextMS(data.Context())
+		ms := parsed.MS
 
 		if !common.ContainsInt64SliceOneOf(ms.Roles, conf.Admins) {
 			return ErrorEmbed(data.Msg.Author, "This command requires you to be an economy admin"), nil
