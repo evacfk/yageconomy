@@ -218,7 +218,7 @@ var GameCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			ms := commands.ContextMS(parsed.Context())
+			ms := parsed.MS
 			u := parsed.Msg.Author
 
 			if conf.FishingMaxWinAmount < 1 {
