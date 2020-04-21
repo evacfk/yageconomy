@@ -161,7 +161,7 @@ RETURNING value;`
 				if shopItem.Type == ItemTypeList {
 					err = bot.SendDMEmbed(u.ID, SimpleEmbedResponse(u, "You purhcased one of **%s**, here it is: ||%s||", shopItem.Name, listValue))
 				} else if shopItem.Type == ItemTypeRole {
-					err = common.AddRoleDS(commands.ContextMS(parsed.Context()), shopItem.RoleID)
+					err = common.AddRoleDS(parsed.MS, shopItem.RoleID)
 				}
 
 				return err
