@@ -246,7 +246,7 @@ func handleMessageCreate(evt *eventsystem.EventData) {
 
 		amount := rand.Int63n(conf.AutoPlantMax-conf.AutoPlantMin) + conf.AutoPlantMin
 
-		prefix, _ := commands.GetCommandPrefix(conf.GuildID)
+		prefix, _ := commands.GetCommandPrefixRedis(conf.GuildID)
 		msgContent := fmt.Sprintf("**%d** random **%s** appeared! Pick them up with `%spick <password>`", amount, conf.CurrencySymbol, prefix)
 
 		// Plant!
