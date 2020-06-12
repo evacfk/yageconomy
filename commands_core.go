@@ -309,7 +309,7 @@ var CoreCommands = []*commands.YAGCommand{
 				return ErrorEmbed(u, "There's already money planted in this channel"), nil
 			}
 
-			cmdPrefix, _ := commands.GetCommandPrefix(conf.GuildID)
+			cmdPrefix, _ := commands.GetCommandPrefixRedis(conf.GuildID)
 			msgContent := fmt.Sprintf("%s planted **%s%d** in the channel!\nUse `%spick (code-here)` to pick it up", u.Username, conf.CurrencySymbol, amount, cmdPrefix)
 
 			err = PlantMoney(parsed.Context(), conf, parsed.CS.ID, u.ID, int(amount), parsed.Args[1].Str(), msgContent)
