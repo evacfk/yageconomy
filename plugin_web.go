@@ -88,7 +88,6 @@ func (p *Plugin) InitWeb() {
 	web.CPMux.Handle(pat.New("/economy"), subMux)
 	web.CPMux.Handle(pat.New("/economy/*"), subMux)
 
-	subMux.Use(web.RequireGuildChannelsMiddleware)
 
 	mainGetHandler := web.ControllerHandler(handleGetEconomy, "cp_economy_settings")
 
