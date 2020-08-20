@@ -96,10 +96,10 @@ func (p *Plugin) InitWeb() {
 
 	subMux.Handle(pat.Get("/pick_image/:image_id"), http.HandlerFunc(handleGetPickImage))
 
-	subMux.Handle(pat.Post("/delete_pick_image/:image_id"), web.ControllerPostHandler(handleDeleteImage, mainGetHandler, nil, "Deleted a economy pick image"))
-	subMux.Handle(pat.Post("/pick_image"), web.ControllerPostHandler(handleUploadImage, mainGetHandler, nil, "uploaded a economy pick image"))
-	subMux.Handle(pat.Post(""), web.ControllerPostHandler(handlePostEconomy, mainGetHandler, PostConfigForm{}, "Updated economy config"))
-	subMux.Handle(pat.Post("/"), web.ControllerPostHandler(handlePostEconomy, mainGetHandler, PostConfigForm{}, "Updated economy config"))
+	subMux.Handle(pat.Post("/delete_pick_image/:image_id"), web.ControllerPostHandler(handleDeleteImage, mainGetHandler, nil))
+	subMux.Handle(pat.Post("/pick_image"), web.ControllerPostHandler(handleUploadImage, mainGetHandler, nil))
+	subMux.Handle(pat.Post(""), web.ControllerPostHandler(handlePostEconomy, mainGetHandler, PostConfigForm{}))
+	subMux.Handle(pat.Post("/"), web.ControllerPostHandler(handlePostEconomy, mainGetHandler, PostConfigForm{}))
 }
 
 func tmplFormatPercentage(in *decimal.Big) string {
