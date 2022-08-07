@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jonas747/dcmd"
-	"github.com/jonas747/discordgo"
+	"github.com/botlabs-gg/yagpdb/v2/bot"
+	"github.com/botlabs-gg/yagpdb/v2/bot/paginatedmessages"
+	"github.com/botlabs-gg/yagpdb/v2/commands"
+	"github.com/botlabs-gg/yagpdb/v2/common"
+	"github.com/botlabs-gg/yagpdb/v2/lib/dcmd"
+	"github.com/botlabs-gg/yagpdb/v2/lib/discordgo"
+	"github.com/evacfk/yageconomy/models"
 	"github.com/jonas747/retryableredis"
-	"github.com/jonas747/yageconomy/models"
-	"github.com/jonas747/yagpdb/bot"
-	"github.com/jonas747/yagpdb/bot/paginatedmessages"
-	"github.com/jonas747/yagpdb/commands"
-	"github.com/jonas747/yagpdb/common"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
@@ -32,12 +32,12 @@ var (
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			conf := CtxConfig(parsed.Context())
 
-			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GS.ID, parsed.CS.ID, parsed.Args[0].Int(), 0,
+			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, parsed.Args[0].Int(), 0,
 				func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 
 					offset := (newPage - 1) * 10
 					items, err := models.EconomyUsers(
-						models.EconomyUserWhere.GuildID.EQ(parsed.GS.ID),
+						models.EconomyUserWhere.GuildID.EQ(parsed.GuildData.GS.ID),
 						qm.OrderBy("waifu_item_worth + waifu_last_claim_amount + waifu_extra_worth desc"),
 						qm.Limit(10),
 						qm.Offset(offset),
@@ -51,9 +51,9 @@ var (
 					for i, v := range items {
 						ids[i] = v.UserID
 					}
-					users := bot.GetUsersGS(parsed.GS, ids...)
+					users := bot.GetUsers(parsed.GuildData.GS.ID, ids...)
 
-					embed := SimpleEmbedResponse(parsed.Msg.Author, "")
+					embed := SimpleEmbedResponse(parsed.Author, "")
 					embed.Title = "Waifu Leaderboard"
 
 					for i, v := range items {
@@ -79,7 +79,7 @@ var (
 			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			target := parsed.Msg.Author
+			target := parsed.Author
 			account := CtxUser(parsed.Context())
 			originAccount := account
 			conf := CtxConfig(parsed.Context())
@@ -87,7 +87,7 @@ var (
 			if parsed.Args[0].Value != nil {
 				target = parsed.Args[0].User()
 				var err error
-				account, _, err = GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+				account, _, err = GetCreateAccount(parsed.Context(), target.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 				if err != nil {
 					return nil, err
 				}
@@ -116,7 +116,7 @@ var (
 
 			var waifus []*discordgo.User
 			if len(usersToFetch) > 0 {
-				waifus = bot.GetUsersGS(parsed.GS, usersToFetch...)
+				waifus = bot.GetUsers(parsed.GuildData.GS.ID, usersToFetch...)
 				if account.WaifudBy != 0 {
 					claimedByStr = waifus[0].Username
 					waifus = waifus[1:]
@@ -137,7 +137,7 @@ var (
 				claimedBuf.WriteString("No one...")
 			}
 
-			items, err := GetWaifuItems(parsed.GS.ID, account.UserID)
+			items, err := GetWaifuItems(parsed.GuildData.GS.ID, account.UserID)
 			if err != nil {
 				return nil, err
 			}
@@ -199,7 +199,7 @@ var (
 			&dcmd.ArgDef{Name: "Money", Type: &AmountArg{}},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			u := parsed.Msg.Author
+			u := parsed.Author
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
 
@@ -209,7 +209,7 @@ var (
 			}
 
 			// pre-generate the account since its simpler with race conditions and whatnot in the transactions
-			targetAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+			targetAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
@@ -239,7 +239,7 @@ var (
 				if targetAccount.WaifudBy != 0 {
 					// update old owner account
 					result, err := tx.Exec("UPDATE economy_users SET waifus = array_remove(waifus, $3) WHERE guild_id = $1 AND user_id = $2 AND $4 <@ waifus",
-						parsed.GS.ID, targetAccount.WaifudBy, target.ID, pq.Int64Array([]int64{target.ID}))
+						parsed.GuildData.GS.ID, targetAccount.WaifudBy, target.ID, pq.Int64Array([]int64{target.ID}))
 					if err != nil {
 						return err
 					}
@@ -255,7 +255,7 @@ var (
 				}
 
 				// update waifu
-				numRows, err := models.EconomyUsers(qm.Where("guild_id = ? AND user_id = ? AND waifud_by = ?", parsed.GS.ID, target.ID, targetAccount.WaifudBy)).UpdateAll(
+				numRows, err := models.EconomyUsers(qm.Where("guild_id = ? AND user_id = ? AND waifud_by = ?", parsed.GuildData.GS.ID, target.ID, targetAccount.WaifudBy)).UpdateAll(
 					parsed.Context(), tx, models.M{"waifud_by": u.ID, "waifu_last_claim_amount": claimAmount})
 
 				if err != nil {
@@ -268,7 +268,7 @@ var (
 				}
 
 				_, err = tx.Exec("UPDATE economy_users SET waifus = waifus || $4, money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2",
-					parsed.GS.ID, u.ID, claimAmount, pq.Int64Array([]int64{target.ID}))
+					parsed.GuildData.GS.ID, u.ID, claimAmount, pq.Int64Array([]int64{target.ID}))
 				return errors.Wrap(err, "update_waifus")
 			})
 
@@ -298,12 +298,12 @@ var (
 				return nil, err
 			}
 
-			_, err = common.PQ.Exec("DELETE FROM economy_users_waifu_items WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, account.UserID)
+			_, err = common.PQ.Exec("DELETE FROM economy_users_waifu_items WHERE guild_id = $1 AND user_id = $2", parsed.GuildData.GS.ID, account.UserID)
 			if err != nil {
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(parsed.Msg.Author, "Reset your waifu stats, keeping your waifus"), nil
+			return SimpleEmbedResponse(parsed.Author, "Reset your waifu stats, keeping your waifus"), nil
 		},
 	}
 	WaifuCmdTransfer = &commands.YAGCommand{
@@ -316,19 +316,19 @@ var (
 			&dcmd.ArgDef{Name: "New Owner", Type: dcmd.AdvUserNoMember},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			u := parsed.Msg.Author
+			u := parsed.Author
 			account := CtxUser(parsed.Context())
 
 			waifu := parsed.Args[0].User()
 			newOwner := parsed.Args[1].User()
 
 			conf := CtxConfig(parsed.Context())
-			_, _, err := GetCreateAccount(parsed.Context(), newOwner.ID, parsed.GS.ID, conf.StartBalance)
+			_, _, err := GetCreateAccount(parsed.Context(), newOwner.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
 
-			waifuAccount, _, err := GetCreateAccount(parsed.Context(), waifu.ID, parsed.GS.ID, conf.StartBalance)
+			waifuAccount, _, err := GetCreateAccount(parsed.Context(), waifu.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
@@ -354,7 +354,7 @@ var (
 			err = common.SqlTX(func(tx *sql.Tx) error {
 				// update old owner account
 				result, err := tx.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3, waifus = array_remove(waifus, $4) WHERE guild_id = $1 AND user_id = $2 AND $5 <@ waifus",
-					parsed.GS.ID, u.ID, transferFee, waifu.ID, pq.Int64Array([]int64{waifu.ID}))
+					parsed.GuildData.GS.ID, u.ID, transferFee, waifu.ID, pq.Int64Array([]int64{waifu.ID}))
 				if err != nil {
 					return err
 				}
@@ -369,13 +369,13 @@ var (
 				}
 
 				// update new owner account
-				_, err = tx.Exec("UPDATE economy_users SET waifus = waifus || $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, newOwner.ID, pq.Int64Array([]int64{waifu.ID}))
+				_, err = tx.Exec("UPDATE economy_users SET waifus = waifus || $3 WHERE guild_id = $1 AND user_id = $2", parsed.GuildData.GS.ID, newOwner.ID, pq.Int64Array([]int64{waifu.ID}))
 				if err != nil {
 					return err
 				}
 
 				// update waifu
-				_, err = tx.Exec("UPDATE economy_users SET waifud_by = $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, waifu.ID, newOwner.ID)
+				_, err = tx.Exec("UPDATE economy_users SET waifud_by = $3 WHERE guild_id = $1 AND user_id = $2", parsed.GuildData.GS.ID, waifu.ID, newOwner.ID)
 				return err
 			})
 			if err != nil {
@@ -394,13 +394,13 @@ var (
 			&dcmd.ArgDef{Name: "Waifu", Type: dcmd.AdvUserNoMember},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			waifu := parsed.Args[0].User()
 
 			conf := CtxConfig(parsed.Context())
 
-			waifuAccount, _, err := GetCreateAccount(parsed.Context(), waifu.ID, parsed.GS.ID, conf.StartBalance)
+			waifuAccount, _, err := GetCreateAccount(parsed.Context(), waifu.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
@@ -418,7 +418,7 @@ var (
 			err = common.SqlTX(func(tx *sql.Tx) error {
 				// update old owner account
 				result, err := tx.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3, waifus = array_remove(waifus, $4), waifu_divorces = waifu_divorces+1 WHERE guild_id = $1 AND user_id = $2 AND $5 <@ waifus",
-					parsed.GS.ID, u.ID, moneyBack, waifu.ID, pq.Int64Array([]int64{waifu.ID}))
+					parsed.GuildData.GS.ID, u.ID, moneyBack, waifu.ID, pq.Int64Array([]int64{waifu.ID}))
 				if err != nil {
 					return err
 				}
@@ -433,7 +433,7 @@ var (
 				}
 
 				// update waifu
-				_, err = tx.Exec("UPDATE economy_users SET waifud_by = 0 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, waifu.ID)
+				_, err = tx.Exec("UPDATE economy_users SET waifud_by = 0 WHERE guild_id = $1 AND user_id = $2", parsed.GuildData.GS.ID, waifu.ID)
 				return err
 			})
 
@@ -453,7 +453,7 @@ var (
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			resp := ""
 			affinityMod := 0
@@ -487,7 +487,7 @@ var (
 
 			// check cooldown
 			var cdResp string
-			err := common.RedisPool.Do(retryableredis.Cmd(&cdResp, "SET", fmt.Sprintf("economy_affinity_cd:%d:%d", parsed.GS.ID, u.ID), "1", "EX", "1800", "NX"))
+			err := common.RedisPool.Do(retryableredis.Cmd(&cdResp, "SET", fmt.Sprintf("economy_affinity_cd:%d:%d", parsed.GuildData.GS.ID, u.ID), "1", "EX", "1800", "NX"))
 			if err != nil {
 				return nil, err
 			}
@@ -497,7 +497,7 @@ var (
 			}
 
 			_, err = common.PQ.Exec("UPDATE economy_users SET waifu_affinity_towards = $3, waifu_affinity_changes = waifu_affinity_changes + $4 WHERE user_id = $2 AND guild_id = $1",
-				parsed.GS.ID, u.ID, account.WaifuAffinityTowards, affinityMod)
+				parsed.GuildData.GS.ID, u.ID, account.WaifuAffinityTowards, affinityMod)
 			if err != nil {
 				return nil, err
 			}
@@ -516,18 +516,18 @@ var (
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			if parsed.Args[0].Value == nil {
-				return ListWaifuItems(parsed.GS.ID, parsed.CS.ID, u, account.MoneyWallet, conf.CurrencySymbol)
+				return ListWaifuItems(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, u, account.MoneyWallet, conf.CurrencySymbol)
 			}
 
 			if parsed.Args[1].Value == nil {
 				return ErrorEmbed(u, "Re-run the command with the user you wanna gift it to included"), nil
 			}
 
-			// itemToBuy, err := models.FindEconomyWaifuItemG(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int64())
-			itemToBuy, err := FindWaifuItemByName(parsed.Context(), parsed.GS.ID, parsed.Args[0].Str(), nil)
+			// itemToBuy, err := models.FindEconomyWaifuItemG(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Int64())
+			itemToBuy, err := FindWaifuItemByName(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Str(), nil)
 			if err != nil {
 				return nil, err
 			}
@@ -542,7 +542,7 @@ var (
 
 			// ensure the target has a wallet
 			target := parsed.Args[1].User()
-			_, _, err = GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+			_, _, err = GetCreateAccount(parsed.Context(), target.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
@@ -555,7 +555,7 @@ var (
 			err = common.SqlTX(func(tx *sql.Tx) error {
 				// deduct money from our account
 				err = TransferMoneyWallet(parsed.Context(), tx, conf, false, u.ID, common.BotUser.ID, int64(itemToBuy.Price), int64(itemToBuy.Price))
-				// _, err := tx.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, u.ID, itemToBuy.Price)
+				// _, err := tx.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GuildData.GS.ID, u.ID, itemToBuy.Price)
 				if err != nil {
 					return err
 				}
@@ -568,14 +568,14 @@ INSERT INTO economy_users_waifu_items  (guild_id, user_id, item_id, quantity)
 VALUES ($1, $2, $3, 1)
 ON CONFLICT (guild_id, user_id, item_id)
 DO UPDATE SET 
-quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, itemToBuy.LocalID)
+quantity = economy_users_waifu_items.quantity + 1`, parsed.GuildData.GS.ID, target.ID, itemToBuy.LocalID)
 				if err != nil {
 					return err
 				}
 
 				// increase their worth
 				_, err = tx.Exec("UPDATE economy_users SET waifu_item_worth = waifu_item_worth + $3, gambling_boost_percentage=gambling_boost_percentage+$4 WHERE guild_id = $1 AND user_id = $2",
-					parsed.GS.ID, target.ID, worthIncrease, itemToBuy.GamblingBoost)
+					parsed.GuildData.GS.ID, target.ID, worthIncrease, itemToBuy.GamblingBoost)
 				return err
 			})
 
@@ -602,16 +602,16 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 			&dcmd.ArgDef{Name: "Name", Type: dcmd.String},
 		},
 		ArgSwitches: []*dcmd.ArgDef{
-			&dcmd.ArgDef{Switch: "boost", Name: "Gambling boost", Type: dcmd.Int},
+			&dcmd.ArgDef{Name: "boot", Type: dcmd.Int},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			localID, err := common.GenLocalIncrID(parsed.GS.ID, "economy_item")
+			localID, err := common.GenLocalIncrID(parsed.GuildData.GS.ID, "economy_item")
 			if err != nil {
 				return nil, err
 			}
 
 			m := &models.EconomyWaifuItem{
-				GuildID:       parsed.GS.ID,
+				GuildID:       parsed.GuildData.GS.ID,
 				LocalID:       localID,
 				Price:         parsed.Args[0].Int(),
 				Icon:          parsed.Args[1].Str(),
@@ -630,7 +630,7 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 			}
 
 			conf := CtxConfig(parsed.Context())
-			return SimpleEmbedResponse(parsed.Msg.Author, "Added **%s** to the shop at the price of **%s%d**%s",
+			return SimpleEmbedResponse(parsed.Author, "Added **%s** to the shop at the price of **%s%d**%s",
 				m.Name, conf.CurrencySymbol, m.Price, extraStr), nil
 		},
 	}
@@ -647,14 +647,14 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 
-			// item, err := models.FindEconomyWaifuItemG(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int64())
-			item, err := FindWaifuItemByName(parsed.Context(), parsed.GS.ID, parsed.Args[0].Str(), nil)
+			// item, err := models.FindEconomyWaifuItemG(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Int64())
+			item, err := FindWaifuItemByName(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Str(), nil)
 			if err != nil {
 				return nil, err
 			}
 
 			if item == nil {
-				return ErrorEmbed(parsed.Msg.Author, "No item by that id"), nil
+				return ErrorEmbed(parsed.Author, "No item by that id"), nil
 			}
 
 			item.Price = parsed.Args[1].Int()
@@ -666,7 +666,7 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(parsed.Msg.Author, "Updated **%s**", item.Name), nil
+			return SimpleEmbedResponse(parsed.Author, "Updated **%s**", item.Name), nil
 		},
 	}
 	WaifuCmdDel = &commands.YAGCommand{
@@ -679,13 +679,13 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 
-			item, err := FindWaifuItemByName(parsed.Context(), parsed.GS.ID, parsed.Args[0].Str(), nil)
+			item, err := FindWaifuItemByName(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Str(), nil)
 			if err != nil {
 				return nil, err
 			}
 
 			if item == nil {
-				return ErrorEmbed(parsed.Msg.Author, "No item by that ID"), nil
+				return ErrorEmbed(parsed.Author, "No item by that ID"), nil
 			}
 
 			_, err = item.DeleteG(parsed.Context())
@@ -693,7 +693,7 @@ quantity = economy_users_waifu_items.quantity + 1`, parsed.GS.ID, target.ID, ite
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(parsed.Msg.Author, "Deleted item ID %d", parsed.Args[0].Int()), nil
+			return SimpleEmbedResponse(parsed.Author, "Deleted item ID %d", parsed.Args[0].Int()), nil
 		},
 	}
 )

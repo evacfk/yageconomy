@@ -2,7 +2,7 @@ Economy, gambling, waifu and so on features for YAGDPDB
 
 To use:
 
-1. Add 	"github.com/jonas747/yageconomy" to the bottom of the imports in yags `cmd/yagpdb/main.go`
+1. Add 	"github.com/evacfk/yageconomy" to the bottom of the imports in yags `cmd/yagpdb/main.go`
 2. Add "yageconomy.RegisterPlugin()" at the bottom of all the other "RegisterPlugin()" calls in yags main.go
 
 If using docker, you need to make a couple changes to the docker file:

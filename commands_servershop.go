@@ -4,18 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/jonas747/dcmd"
-	"github.com/jonas747/discordgo"
-	"github.com/jonas747/yageconomy/models"
-	"github.com/jonas747/yagpdb/bot"
-	"github.com/jonas747/yagpdb/bot/paginatedmessages"
-	"github.com/jonas747/yagpdb/commands"
-	"github.com/jonas747/yagpdb/common"
+	"strconv"
+	"strings"
+
+	"github.com/botlabs-gg/yagpdb/v2/bot"
+	"github.com/botlabs-gg/yagpdb/v2/bot/paginatedmessages"
+	"github.com/botlabs-gg/yagpdb/v2/commands"
+	"github.com/botlabs-gg/yagpdb/v2/common"
+	"github.com/botlabs-gg/yagpdb/v2/lib/dcmd"
+	"github.com/botlabs-gg/yagpdb/v2/lib/discordgo"
+	"github.com/evacfk/yageconomy/models"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -30,15 +31,15 @@ var ShopCommands = []*commands.YAGCommand{
 		Name:        "Shop",
 		Description: "Shows the items available in the server shop",
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			u := parsed.Msg.Author
+			u := parsed.Author
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
 
-			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GS.ID, parsed.CS.ID, 1, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
+			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, 1, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 				offset := (newPage - 1) * 12
 
 				items, err := models.EconomyShopItems(
-					models.EconomyShopItemWhere.GuildID.EQ(parsed.GS.ID),
+					models.EconomyShopItemWhere.GuildID.EQ(parsed.GuildData.GS.ID),
 					qm.OrderBy("local_id asc"),
 					qm.Limit(12),
 					qm.Offset(offset),
@@ -53,7 +54,7 @@ var ShopCommands = []*commands.YAGCommand{
 				for i, v := range items {
 					name := v.Name
 					if v.RoleID != 0 {
-						r := parsed.GS.RoleCopy(true, v.RoleID)
+						r := parsed.GuildData.GS.GetRole(v.RoleID)
 						if r != nil {
 							name = r.Name
 						} else {
@@ -98,16 +99,16 @@ var ShopCommands = []*commands.YAGCommand{
 			&dcmd.ArgDef{Name: "item", Type: dcmd.Int},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			u := parsed.Msg.Author
+			u := parsed.Author
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
 
-			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int(), nil)
+			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Int(), nil)
 			if err != nil {
 				return nil, err
 			}
 			if shopItem == nil {
-				return ErrorEmbed(parsed.Msg.Author, "No shop item with that ID"), nil
+				return ErrorEmbed(parsed.Author, "No shop item with that ID"), nil
 			}
 
 			if shopItem.Cost > account.MoneyWallet {
@@ -133,7 +134,7 @@ WHERE  value = (
 )
 RETURNING value;`
 
-					row := tx.QueryRow(query, parsed.GS.ID, shopItem.LocalID, u.ID)
+					row := tx.QueryRow(query, parsed.GuildData.GS.ID, shopItem.LocalID, u.ID)
 
 					err = row.Scan(&listValue)
 					if err != nil {
@@ -151,7 +152,7 @@ RETURNING value;`
 				}
 
 				_, err = tx.Exec("UPDATE economy_users SET gambling_boost_percentage = gambling_boost_percentage + $3 WHERE guild_id = $1 AND user_id = $2",
-					parsed.GS.ID, u.ID, shopItem.GamblingBoostPercentage)
+					parsed.GuildData.GS.ID, u.ID, shopItem.GamblingBoostPercentage)
 
 				if err != nil {
 					return err
@@ -161,7 +162,7 @@ RETURNING value;`
 				if shopItem.Type == ItemTypeList {
 					err = bot.SendDMEmbed(u.ID, SimpleEmbedResponse(u, "You purhcased one of **%s**, here it is: ||%s||", shopItem.Name, listValue))
 				} else if shopItem.Type == ItemTypeRole {
-					err = common.AddRoleDS(parsed.MS, shopItem.RoleID)
+					err = common.AddRoleDS(parsed.GuildData.MS, shopItem.RoleID)
 				}
 
 				return err
@@ -193,7 +194,7 @@ var ShopAdminCommands = []*commands.YAGCommand{
 		},
 		RequiredArgs: 3,
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			tStr := strings.ToLower(parsed.Args[0].Str())
 
@@ -215,7 +216,7 @@ var ShopAdminCommands = []*commands.YAGCommand{
 				}
 			}
 
-			lID, err := common.GenLocalIncrID(parsed.GS.ID, "economy_shop_item")
+			lID, err := common.GenLocalIncrID(parsed.GuildData.GS.ID, "economy_shop_item")
 			if err != nil {
 				return nil, err
 			}
@@ -225,22 +226,21 @@ var ShopAdminCommands = []*commands.YAGCommand{
 
 			// this is a role
 			if t == ItemTypeRole {
-				parsed.GS.RLock()
-				for _, v := range parsed.GS.Guild.Roles {
+				for _, v := range parsed.GuildData.GS.Roles {
 					if strings.EqualFold(v.Name, name) {
 						roleID = v.ID
 						name = v.Name
 						break
 					}
 				}
-				parsed.GS.RUnlock()
+
 				if roleID == 0 {
 					return ErrorEmbed(u, "Unknown role %q", name), nil
 				}
 			}
 
 			m := &models.EconomyShopItem{
-				GuildID: parsed.GS.ID,
+				GuildID: parsed.GuildData.GS.ID,
 				LocalID: lID,
 
 				Type: int16(t),
@@ -269,27 +269,27 @@ var ShopAdminCommands = []*commands.YAGCommand{
 			&dcmd.ArgDef{Name: "Item", Type: dcmd.String},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			u := parsed.Msg.Author
+			u := parsed.Author
 
-			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int(), nil)
+			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Int(), nil)
 			if err != nil {
 				return nil, err
 			}
 			if shopItem == nil {
-				return ErrorEmbed(parsed.Msg.Author, "No shop item with that ID"), nil
+				return ErrorEmbed(parsed.Author, "No shop item with that ID"), nil
 			}
 
 			if shopItem.Type != 1 {
 				return ErrorEmbed(u, "That shop item is not a list"), nil
 			}
 
-			lID, err := common.GenLocalIncrID(parsed.GS.ID, "economy_shop_list_item")
+			lID, err := common.GenLocalIncrID(parsed.GuildData.GS.ID, "economy_shop_list_item")
 			if err != nil {
 				return nil, err
 			}
 
 			m := &models.EconomyShopListItem{
-				GuildID: parsed.GS.ID,
+				GuildID: parsed.GuildData.GS.ID,
 				LocalID: lID,
 				ListID:  shopItem.LocalID,
 				Value:   parsed.Args[1].Str(),
@@ -314,13 +314,13 @@ var ShopAdminCommands = []*commands.YAGCommand{
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 
-			// shopItem, err := models.FindEconomyShopItemG(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int64())
-			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GS.ID, parsed.Args[0].Int(), nil)
+			// shopItem, err := models.FindEconomyShopItemG(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Int64())
+			shopItem, err := FindServerShopItemByOrderIndex(parsed.Context(), parsed.GuildData.GS.ID, parsed.Args[0].Int(), nil)
 			if err != nil {
 				return nil, err
 			}
 			if shopItem == nil {
-				return ErrorEmbed(parsed.Msg.Author, "No shop item with that ID"), nil
+				return ErrorEmbed(parsed.Author, "No shop item with that ID"), nil
 			}
 
 			_, err = shopItem.DeleteG(parsed.Context())
@@ -328,7 +328,7 @@ var ShopAdminCommands = []*commands.YAGCommand{
 				return nil, err
 			}
 
-			return SimpleEmbedResponse(parsed.Msg.Author, "Deleted **%s** from the server shop", shopItem.Name), nil
+			return SimpleEmbedResponse(parsed.Author, "Deleted **%s** from the server shop", shopItem.Name), nil
 		},
 	},
 }

@@ -5,9 +5,9 @@ package yageconomy
 import (
 	"context"
 	"database/sql"
+	"github.com/botlabs-gg/yagpdb/v2/common"
 	"github.com/ericlagergren/decimal"
-	"github.com/jonas747/yageconomy/models"
-	"github.com/jonas747/yagpdb/common"
+	"github.com/evacfk/yageconomy/models"
 	"github.com/volatiletech/sqlboiler/types"
 )
 

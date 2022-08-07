@@ -2,14 +2,15 @@ package yageconomy
 
 import (
 	"fmt"
-	"github.com/jonas747/dcmd"
-	"github.com/jonas747/yageconomy/models"
-	"github.com/jonas747/yagpdb/commands"
-	"github.com/jonas747/yagpdb/common"
-	"github.com/volatiletech/sqlboiler/boil"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/botlabs-gg/yagpdb/v2/commands"
+	"github.com/botlabs-gg/yagpdb/v2/common"
+	"github.com/botlabs-gg/yagpdb/v2/lib/dcmd"
+	"github.com/evacfk/yageconomy/models"
+	"github.com/volatiletech/sqlboiler/boil"
 )
 
 var GameCommands = []*commands.YAGCommand{
@@ -27,7 +28,7 @@ var GameCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			amount, resp := parsed.Args[0].Value.(*AmountArgResult).ApplyWithRestrictions(account.MoneyWallet, conf.CurrencySymbol, "wallet", true, 1)
 			if resp != "" {
@@ -95,7 +96,7 @@ var GameCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			amount, resp := parsed.Args[0].Value.(*AmountArgResult).ApplyWithRestrictions(account.MoneyWallet, conf.CurrencySymbol, "wallet", true, 1)
 			if resp != "" {
@@ -150,7 +151,7 @@ var GameCommands = []*commands.YAGCommand{
 
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			if conf.RobFine < 1 {
 				return ErrorEmbed(u, "No fine as been set, as a result the rob command has been disabled"), nil
@@ -161,11 +162,11 @@ var GameCommands = []*commands.YAGCommand{
 				return ErrorEmbed(u, "The rob command is still on cooldown for you for another %s", common.HumanizeDuration(common.DurationPrecisionSeconds, cooldownLeft)), nil
 			}
 
-			if target.ID == parsed.Msg.Author.ID {
+			if target.ID == parsed.Author.ID {
 				return ErrorEmbed(u, "Can't rob yourself..."), nil
 			}
 
-			targetAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+			targetAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
@@ -218,8 +219,7 @@ var GameCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			ms := parsed.MS
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			if conf.FishingMaxWinAmount < 1 {
 				return ErrorEmbed(u, "Fishing not set up on this server"), nil
@@ -235,7 +235,7 @@ var GameCommands = []*commands.YAGCommand{
 			}
 
 			result, err := common.PQ.Exec(`UPDATE economy_users SET last_fishing = now(), money_wallet = money_wallet + $4, fish_caugth = fish_caugth + $5
-			WHERE guild_id = $1 AND user_id = $2 AND EXTRACT(EPOCH FROM (now() - last_fishing)) > $3`, parsed.GS.ID, ms.ID, conf.FishingCooldown*60, wonAmount, fishAmount)
+			WHERE guild_id = $1 AND user_id = $2 AND EXTRACT(EPOCH FROM (now() - last_fishing)) > $3`, parsed.GuildData.GS.ID, u.ID, conf.FishingCooldown*60, wonAmount, fishAmount)
 			if err != nil {
 				return nil, err
 			}
@@ -262,9 +262,9 @@ var GameCommands = []*commands.YAGCommand{
 		Name:        "Heist",
 		Description: "Starts a heist in 1 minute from now",
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			resp, err := NewHeist(CtxConfig(parsed.Context()), parsed.GS.ID, parsed.CS.ID, parsed.Msg.Author, CtxUser(parsed.Context()), time.Minute)
+			resp, err := NewHeist(CtxConfig(parsed.Context()), parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, parsed.Author, CtxUser(parsed.Context()), time.Minute)
 			if resp != "" {
-				return ErrorEmbed(parsed.Msg.Author, "%s", resp), err
+				return ErrorEmbed(parsed.Author, "%s", resp), err
 			}
 			return nil, err
 		},
@@ -283,7 +283,7 @@ func gamblingCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 		gamblingBanLeft := account.LastFailedHeist.Add(time.Duration(conf.HeistFailedGamblingBanDuration) * time.Minute).Sub(time.Now())
 
 		if gamblingBanLeft > 0 {
-			return ErrorEmbed(data.Msg.Author, "You're still banned from gambling for another %s", common.HumanizeDuration(common.DurationPrecisionSeconds, gamblingBanLeft)), nil
+			return ErrorEmbed(data.Author, "You're still banned from gambling for another %s", common.HumanizeDuration(common.DurationPrecisionSeconds, gamblingBanLeft)), nil
 		}
 
 		return inner(data)
