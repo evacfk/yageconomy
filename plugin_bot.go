@@ -5,25 +5,27 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/fogleman/gg"
-	"github.com/golang/freetype/truetype"
-	"github.com/jonas747/dcmd"
-	"github.com/jonas747/discordgo"
-	"github.com/jonas747/yageconomy/models"
-	"github.com/jonas747/yagpdb/bot"
-	"github.com/jonas747/yagpdb/bot/eventsystem"
-	"github.com/jonas747/yagpdb/commands"
-	"github.com/jonas747/yagpdb/common"
-	"github.com/pkg/errors"
-	"github.com/volatiletech/sqlboiler/boil"
-	"github.com/volatiletech/sqlboiler/queries/qm"
-	"golang.org/x/image/font/gofont/goregular"
 	"image"
 	"image/color"
 	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/botlabs-gg/yagpdb/v2/bot"
+	"github.com/botlabs-gg/yagpdb/v2/bot/eventsystem"
+	"github.com/botlabs-gg/yagpdb/v2/commands"
+	"github.com/botlabs-gg/yagpdb/v2/common"
+	"github.com/botlabs-gg/yagpdb/v2/common/prefix"
+	"github.com/botlabs-gg/yagpdb/v2/lib/dcmd"
+	"github.com/botlabs-gg/yagpdb/v2/lib/discordgo"
+	"github.com/evacfk/yageconomy/models"
+	"github.com/fogleman/gg"
+	"github.com/golang/freetype/truetype"
+	"github.com/pkg/errors"
+	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
+	"golang.org/x/image/font/gofont/goregular"
 )
 
 var _ bot.BotInitHandler = (*Plugin)(nil)
@@ -56,7 +58,7 @@ func (p *Plugin) AddCommands() {
 	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware, economyAdminMiddleware}, CoreAdminCommands...)
 	commands.AddRootCommandsWithMiddlewares(p, []dcmd.MiddleWareFunc{economyCmdMiddleware, gamblingCmdMiddleware, moneyAlteringMW}, GameCommands...)
 
-	waifuContainer := commands.CommandSystem.Root.Sub("waifu", "wf")
+	waifuContainer, _ := commands.CommandSystem.Root.Sub("waifu", "wf")
 	waifuContainer.NotFound = commands.CommonContainerNotFoundHandler(waifuContainer, "")
 
 	waifuContainer.AddMidlewares(economyCmdMiddleware)
@@ -80,10 +82,10 @@ func (p *Plugin) BotInit() {
 
 func economyCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 	return func(data *dcmd.Data) (interface{}, error) {
-		config, err := models.FindEconomyConfigG(data.Context(), data.GS.ID)
+		config, err := models.FindEconomyConfigG(data.Context(), data.GuildData.GS.ID)
 		if err != nil {
 			if errors.Cause(err) == sql.ErrNoRows {
-				config = DefaultConfig(data.GS.ID)
+				config = DefaultConfig(data.GuildData.GS.ID)
 			} else {
 				return "Failed retrieving economy config", err
 			}
@@ -94,13 +96,13 @@ func economyCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 		}
 
 		if len(config.EnabledChannels) > 0 {
-			if !common.ContainsInt64Slice(config.EnabledChannels, data.CS.ID) {
+			if !common.ContainsInt64Slice(config.EnabledChannels, data.GuildData.CS.ID) {
 				return "Economy disabled in this channel", nil
 			}
 		}
 
 		ctx := context.WithValue(data.Context(), CtxKeyConfig, config)
-		account, _, err := GetCreateAccount(ctx, data.Msg.Author.ID, data.GS.ID, config.StartBalance)
+		account, _, err := GetCreateAccount(ctx, data.Author.ID, data.GuildData.GS.ID, config.StartBalance)
 		if err != nil {
 			return "Failed creating or retrieving your economy account", err
 		}
@@ -113,10 +115,9 @@ func economyCmdMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 func economyAdminMiddleware(inner dcmd.RunFunc) dcmd.RunFunc {
 	return func(data *dcmd.Data) (interface{}, error) {
 		conf := CtxConfig(data.Context())
-		ms := data.MS
 
-		if !common.ContainsInt64SliceOneOf(ms.Roles, conf.Admins) {
-			return ErrorEmbed(data.Msg.Author, "This command requires you to be an economy admin"), nil
+		if !common.ContainsInt64SliceOneOf(data.GuildData.MS.Member.Roles, conf.Admins) {
+			return ErrorEmbed(data.Author, "This command requires you to be an economy admin"), nil
 		}
 
 		return inner(data)
@@ -246,7 +247,7 @@ func handleMessageCreate(evt *eventsystem.EventData) {
 
 		amount := rand.Int63n(conf.AutoPlantMax-conf.AutoPlantMin) + conf.AutoPlantMin
 
-		prefix, _ := commands.GetCommandPrefixRedis(conf.GuildID)
+		prefix, _ := prefix.GetCommandPrefixRedis(conf.GuildID)
 		msgContent := fmt.Sprintf("**%d** random **%s** appeared! Pick them up with `%spick <password>`", amount, conf.CurrencySymbol, prefix)
 
 		// Plant!
@@ -462,7 +463,42 @@ func (ca *AmountArg) Matches(def *dcmd.ArgDef, part string) bool {
 	return true
 }
 
-func (ca *AmountArg) Parse(def *dcmd.ArgDef, part string, data *dcmd.Data) (interface{}, error) {
+// CheckCompatibility reports the degree to which the input matches the type.
+func (ca *AmountArg) CheckCompatibility(def *dcmd.ArgDef, part string) dcmd.CompatibilityResult {
+	return dcmd.CompatibilityGood
+}
+
+// Attempt to parse it, returning any error if one occured.
+// ParseFromMessage(def *ArgDef, part string, data *Data) (val interface{}, err error)
+func (ca *AmountArg) ParseFromInteraction(def *dcmd.ArgDef, data *dcmd.Data, options *dcmd.SlashCommandsParseOptions) (val interface{}, err error) {
+	any, err := options.ExpectAny(def.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	var v int64
+	switch t := any.(type) {
+	case string:
+		v, err = strconv.ParseInt(t, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+	case int64:
+		v = t
+	default:
+	}
+
+	return &AmountArgResult{
+		IsFixed:     true,
+		FixedAmount: v,
+	}, nil
+}
+
+func (ca *AmountArg) SlashCommandOptions(def *dcmd.ArgDef) []*discordgo.ApplicationCommandOption {
+	return []*discordgo.ApplicationCommandOption{def.StandardSlashCommandOption(discordgo.ApplicationCommandOptionInteger)}
+}
+
+func (ca *AmountArg) ParseFromMessage(def *dcmd.ArgDef, part string, data *dcmd.Data) (interface{}, error) {
 	// read fixed number
 	fixed, err := strconv.ParseInt(part, 10, 64)
 	if err == nil {
@@ -497,7 +533,6 @@ func (ca *AmountArg) Parse(def *dcmd.ArgDef, part string, data *dcmd.Data) (inte
 	return &AmountArgResult{
 		Multiplier: multiplier,
 	}, nil
-
 }
 
 func (ca *AmountArg) HelpName() string {
@@ -590,8 +625,8 @@ func UnlockMoneyAltering(guildID, userID int64) {
 
 func moneyAlteringMW(inner dcmd.RunFunc) dcmd.RunFunc {
 	return func(data *dcmd.Data) (interface{}, error) {
-		if locked, resp := IsMoneyAlteringLocked(data.GS.ID, data.Msg.Author.ID); locked {
-			return ErrorEmbed(data.Msg.Author, resp), nil
+		if locked, resp := IsMoneyAlteringLocked(data.GuildData.CS.ID, data.Author.ID); locked {
+			return ErrorEmbed(data.Author, resp), nil
 		}
 
 		return inner(data)

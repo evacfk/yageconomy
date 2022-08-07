@@ -3,22 +3,27 @@ package yageconomy
 import (
 	"bytes"
 	"database/sql"
+	_ "embed"
+	"image"
+	"io"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/botlabs-gg/yagpdb/v2/common"
+	"github.com/botlabs-gg/yagpdb/v2/web"
 	"github.com/ericlagergren/decimal"
-	"github.com/jonas747/yageconomy/models"
-	"github.com/jonas747/yagpdb/common"
-	"github.com/jonas747/yagpdb/web"
+	"github.com/evacfk/yageconomy/models"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	"github.com/volatiletech/sqlboiler/types"
 	"goji.io"
 	"goji.io/pat"
-	"image"
-	"io"
-	"net/http"
-	"strconv"
-	"time"
 )
+
+//go:embed assets/economy.html
+var PageHTML string
 
 type PostConfigForm struct {
 	Enabled                        bool
@@ -77,7 +82,8 @@ func (p PostConfigForm) DBModel() *models.EconomyConfig {
 }
 
 func (p *Plugin) InitWeb() {
-	web.LoadHTMLTemplate("../../../yageconomy/assets/economy.html", "templates/plugins/economy.html")
+	// web.LoadHTMLTemplate("../../../yageconomy/assets/economy.html", "templates/plugins/economy.html")
+	web.AddHTMLTemplate("yageconomy/assets/economy.html", PageHTML)
 	web.AddSidebarItem(web.SidebarCategoryFun, &web.SidebarItem{
 		Name: "Economy",
 		URL:  "economy",
@@ -87,7 +93,6 @@ func (p *Plugin) InitWeb() {
 
 	web.CPMux.Handle(pat.New("/economy"), subMux)
 	web.CPMux.Handle(pat.New("/economy/*"), subMux)
-
 
 	mainGetHandler := web.ControllerHandler(handleGetEconomy, "cp_economy_settings")
 

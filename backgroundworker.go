@@ -1,8 +1,8 @@
 package yageconomy
 
 import (
-	"github.com/jonas747/yagpdb/common"
-	"github.com/jonas747/yagpdb/common/backgroundworkers"
+	"github.com/botlabs-gg/yagpdb/v2/common"
+	"github.com/botlabs-gg/yagpdb/v2/common/backgroundworkers"
 	"sync"
 	"time"
 )

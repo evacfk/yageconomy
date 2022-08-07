@@ -4,20 +4,22 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/jonas747/dcmd"
-	"github.com/jonas747/discordgo"
-	"github.com/jonas747/dstate/v2"
-	"github.com/jonas747/yageconomy/models"
-	"github.com/jonas747/yagpdb/bot"
-	"github.com/jonas747/yagpdb/bot/paginatedmessages"
-	"github.com/jonas747/yagpdb/commands"
-	"github.com/jonas747/yagpdb/common"
-	"github.com/pkg/errors"
-	"github.com/volatiletech/sqlboiler/boil"
-	"github.com/volatiletech/sqlboiler/queries/qm"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/botlabs-gg/yagpdb/v2/bot"
+	"github.com/botlabs-gg/yagpdb/v2/bot/paginatedmessages"
+	"github.com/botlabs-gg/yagpdb/v2/commands"
+	"github.com/botlabs-gg/yagpdb/v2/common"
+	"github.com/botlabs-gg/yagpdb/v2/common/prefix"
+	"github.com/botlabs-gg/yagpdb/v2/lib/dcmd"
+	"github.com/botlabs-gg/yagpdb/v2/lib/discordgo"
+	"github.com/botlabs-gg/yagpdb/v2/lib/dstate"
+	"github.com/evacfk/yageconomy/models"
+	"github.com/pkg/errors"
+	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
 var CoreCommands = []*commands.YAGCommand{
@@ -38,12 +40,12 @@ var CoreCommands = []*commands.YAGCommand{
 				target = parsed.Args[0].User()
 
 				var err error
-				targetAccount, _, err = GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+				targetAccount, _, err = GetCreateAccount(parsed.Context(), target.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 				if err != nil {
 					return nil, err
 				}
 			} else {
-				target = parsed.Msg.Author
+				target = parsed.Author
 				targetAccount = CtxUser(parsed.Context())
 			}
 
@@ -89,7 +91,7 @@ var CoreCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			amount, resp := parsed.Args[0].Value.(*AmountArgResult).ApplyWithRestrictions(account.MoneyBank, conf.CurrencySymbol, "bank account", true, 1)
 			if resp != "" {
@@ -118,7 +120,7 @@ var CoreCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			amount, resp := parsed.Args[0].Value.(*AmountArgResult).ApplyWithRestrictions(account.MoneyWallet, conf.CurrencySymbol, "wallet", true, 1)
 			if resp != "" {
@@ -151,14 +153,14 @@ var CoreCommands = []*commands.YAGCommand{
 
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			amount, resp := parsed.Args[1].Value.(*AmountArgResult).ApplyWithRestrictions(account.MoneyWallet, conf.CurrencySymbol, "wallet", true, 1)
 			if resp != "" {
 				return ErrorEmbed(u, resp), nil
 			}
 
-			targetAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+			targetAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
@@ -188,14 +190,14 @@ var CoreCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			if conf.DailyAmount < 1 {
 				return ErrorEmbed(u, "Daily not set up on this server"), nil
 			}
 
 			result, err := common.PQ.Exec(`UPDATE economy_users SET last_daily_claim = now(), money_wallet = money_wallet + $4
-			WHERE guild_id = $1 AND user_id = $2 AND EXTRACT(EPOCH FROM (now() - last_daily_claim))  > $3`, parsed.GS.ID, u.ID, conf.DailyFrequency*60, conf.DailyAmount)
+			WHERE guild_id = $1 AND user_id = $2 AND EXTRACT(EPOCH FROM (now() - last_daily_claim))  > $3`, parsed.GuildData.GS.ID, u.ID, conf.DailyFrequency*60, conf.DailyAmount)
 			if err != nil {
 				return nil, err
 			}
@@ -228,7 +230,7 @@ var CoreCommands = []*commands.YAGCommand{
 				page = 1
 			}
 
-			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GS.ID, parsed.CS.ID, page, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
+			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, page, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 
 				offset := (newPage - 1) * 10
 				if offset < 0 {
@@ -236,7 +238,7 @@ var CoreCommands = []*commands.YAGCommand{
 				}
 
 				result, err := models.EconomyUsers(
-					models.EconomyUserWhere.GuildID.EQ(parsed.GS.ID),
+					models.EconomyUserWhere.GuildID.EQ(parsed.GuildData.GS.ID),
 					qm.OrderBy("money_wallet + money_bank desc"),
 					qm.Limit(10),
 					qm.Offset(offset)).AllG(context.Background())
@@ -244,7 +246,7 @@ var CoreCommands = []*commands.YAGCommand{
 					return nil, err
 				}
 
-				embed := SimpleEmbedResponse(parsed.Msg.Author, "")
+				embed := SimpleEmbedResponse(parsed.Author, "")
 				embed.Title = conf.CurrencySymbol + " Leaderboard"
 
 				userIDs := make([]int64, len(result))
@@ -252,16 +254,16 @@ var CoreCommands = []*commands.YAGCommand{
 					userIDs[i] = v.UserID
 				}
 
-				members, err := bot.GetMembers(parsed.GS.ID, userIDs...)
+				members, err := bot.GetMembers(parsed.GuildData.GS.ID, userIDs...)
 				// users := bot.GetUsersGS(parsed.GS, userIDs...)
 
 				for i, v := range result {
 					user := ""
 					for _, m := range members {
-						if m.ID == v.UserID {
-							user = m.Nick
+						if m.User.ID == v.UserID {
+							user = m.Member.Nick
 							if user == "" {
-								user = m.Username
+								user = m.User.Username
 							}
 							break
 						}
@@ -297,22 +299,22 @@ var CoreCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			amount, resp := parsed.Args[0].Value.(*AmountArgResult).ApplyWithRestrictions(account.MoneyWallet, conf.CurrencySymbol, "wallet", true, 10)
 			if resp != "" {
 				return ErrorEmbed(u, resp), nil
 			}
 
-			_, err := models.FindEconomyPlantG(parsed.Context(), parsed.CS.ID)
+			_, err := models.FindEconomyPlantG(parsed.Context(), parsed.GuildData.CS.ID)
 			if err == nil {
 				return ErrorEmbed(u, "There's already money planted in this channel"), nil
 			}
 
-			cmdPrefix, _ := commands.GetCommandPrefixRedis(conf.GuildID)
+			cmdPrefix, _ := prefix.GetCommandPrefixRedis(conf.GuildID)
 			msgContent := fmt.Sprintf("%s planted **%s%d** in the channel!\nUse `%spick (code-here)` to pick it up", u.Username, conf.CurrencySymbol, amount, cmdPrefix)
 
-			err = PlantMoney(parsed.Context(), conf, parsed.CS.ID, u.ID, int(amount), parsed.Args[1].Str(), msgContent)
+			err = PlantMoney(parsed.Context(), conf, parsed.GuildData.CS.ID, u.ID, int(amount), parsed.Args[1].Str(), msgContent)
 			if err != nil {
 				return nil, err
 			}
@@ -322,7 +324,9 @@ var CoreCommands = []*commands.YAGCommand{
 				return nil, err
 			}
 
-			bot.MessageDeleteQueue.DeleteMessages(parsed.CS.ID, parsed.Msg.ID)
+			if parsed.TraditionalTriggerData != nil {
+				bot.MessageDeleteQueue.DeleteMessages(parsed.GuildData.CS.ID, parsed.TraditionalTriggerData.Message.ID)
+			}
 
 			return nil, nil
 		},
@@ -336,13 +340,15 @@ var CoreCommands = []*commands.YAGCommand{
 			&dcmd.ArgDef{Name: "Password", Type: dcmd.String},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
-			bot.MessageDeleteQueue.DeleteMessages(parsed.CS.ID, parsed.Msg.ID)
+			if parsed.TraditionalTriggerData != nil {
+				bot.MessageDeleteQueue.DeleteMessages(parsed.GuildData.CS.ID, parsed.TraditionalTriggerData.Message.ID)
+			}
 
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			p, err := models.EconomyPlants(
-				models.EconomyPlantWhere.ChannelID.EQ(parsed.CS.ID),
+				models.EconomyPlantWhere.ChannelID.EQ(parsed.GuildData.CS.ID),
 				models.EconomyPlantWhere.Password.EQ(strings.ToLower(parsed.Args[0].Str())),
 				qm.OrderBy("message_id desc"),
 			).OneG(parsed.Context())
@@ -372,7 +378,7 @@ var CoreCommands = []*commands.YAGCommand{
 
 				pmAmount = pm.Amount
 
-				_, err = tx.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE user_id = $2 AND guild_id = $1", parsed.GS.ID, u.ID, pm.Amount)
+				_, err = tx.Exec("UPDATE economy_users SET money_wallet = money_wallet + $3 WHERE user_id = $2 AND guild_id = $1", parsed.GuildData.GS.ID, u.ID, pm.Amount)
 				if err != nil {
 					return err
 				}
@@ -389,7 +395,7 @@ var CoreCommands = []*commands.YAGCommand{
 				return nil, err
 			}
 
-			common.BotSession.ChannelMessageDelete(parsed.CS.ID, p.MessageID)
+			common.BotSession.ChannelMessageDelete(parsed.GuildData.CS.ID, p.MessageID)
 
 			return SimpleEmbedResponse(u, fmt.Sprintf("Picked up **%s%d**!", conf.CurrencySymbol, pmAmount)), nil
 		},
@@ -411,17 +417,17 @@ var CoreAdminCommands = []*commands.YAGCommand{
 			target := parsed.Args[0].User()
 
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			amount := parsed.Args[1].Int()
 
 			// esnure that the account exists
-			_, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+			_, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
 
-			_, err = common.PQ.Exec("UPDATE economy_users SET money_bank = money_bank + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, target.ID, amount)
+			_, err = common.PQ.Exec("UPDATE economy_users SET money_bank = money_bank + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GuildData.GS.ID, target.ID, amount)
 			if err != nil {
 				return nil, err
 			}
@@ -446,16 +452,16 @@ var CoreAdminCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
-			target := FindRole(parsed.GS, parsed.Args[0].Str())
+			target := FindRole(parsed.GuildData.GS, parsed.Args[0].Str())
 			if target == nil {
 				return ErrorEmbed(u, "Unknown role"), nil
 			}
 
 			amount := parsed.Args[1].Int64()
 
-			bot.BatchMemberJobManager.NewBatchMemberJob(parsed.GS.ID, func(g int64, members []*discordgo.Member) {
+			bot.BatchMemberJobManager.NewBatchMemberJob(parsed.GuildData.GS.ID, func(g int64, members []*discordgo.Member) {
 				numAwarded := 0
 				for _, m := range members {
 					if !common.ContainsInt64Slice(m.Roles, target.ID) {
@@ -471,14 +477,14 @@ var CoreAdminCommands = []*commands.YAGCommand{
 					}
 
 					if !created {
-						_, err = common.PQ.Exec("UPDATE economy_users SET money_bank = money_bank + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, m.User.ID, amount)
+						_, err = common.PQ.Exec("UPDATE economy_users SET money_bank = money_bank + $3 WHERE guild_id = $1 AND user_id = $2", parsed.GuildData.GS.ID, m.User.ID, amount)
 						if err != nil {
 							logger.WithError(err).Error("failed awarding money")
 						}
 					}
 				}
 
-				common.BotSession.ChannelMessageSendEmbed(parsed.CS.ID, SimpleEmbedResponse(u, "Gave %d members **%s%d**", numAwarded, conf.CurrencySymbol, amount))
+				common.BotSession.ChannelMessageSendEmbed(parsed.GuildData.CS.ID, SimpleEmbedResponse(u, "Gave %d members **%s%d**", numAwarded, conf.CurrencySymbol, amount))
 			})
 
 			return SimpleEmbedResponse(u, "Started the job..."), nil
@@ -498,10 +504,10 @@ var CoreAdminCommands = []*commands.YAGCommand{
 			target := parsed.Args[0].User()
 
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
 			// esnure that the account exists
-			tAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GS.ID, conf.StartBalance)
+			tAccount, _, err := GetCreateAccount(parsed.Context(), target.ID, parsed.GuildData.GS.ID, conf.StartBalance)
 			if err != nil {
 				return nil, err
 			}
@@ -511,7 +517,7 @@ var CoreAdminCommands = []*commands.YAGCommand{
 				return ErrorEmbed(u, resp), nil
 			}
 
-			_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GS.ID, target.ID, amount)
+			_, err = common.PQ.Exec("UPDATE economy_users SET money_wallet = money_wallet - $3 WHERE guild_id = $1 AND user_id = $2", parsed.GuildData.GS.ID, target.ID, amount)
 			if err != nil {
 				return nil, err
 			}
@@ -536,14 +542,14 @@ var CoreAdminCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 
 			conf := CtxConfig(parsed.Context())
-			u := parsed.Msg.Author
+			u := parsed.Author
 
-			target := FindRole(parsed.GS, parsed.Args[0].Str())
+			target := FindRole(parsed.GuildData.GS, parsed.Args[0].Str())
 			if target == nil {
 				return ErrorEmbed(u, "Unknown role"), nil
 			}
 
-			bot.BatchMemberJobManager.NewBatchMemberJob(parsed.GS.ID, func(g int64, members []*discordgo.Member) {
+			bot.BatchMemberJobManager.NewBatchMemberJob(parsed.GuildData.GS.ID, func(g int64, members []*discordgo.Member) {
 				numTaken := 0
 				for _, m := range members {
 					if !common.ContainsInt64Slice(m.Roles, target.ID) {
@@ -570,7 +576,7 @@ var CoreAdminCommands = []*commands.YAGCommand{
 					}
 				}
 
-				common.BotSession.ChannelMessageSendEmbed(parsed.CS.ID, SimpleEmbedResponse(u, "Took away from %d members", numTaken))
+				common.BotSession.ChannelMessageSendEmbed(parsed.GuildData.CS.ID, SimpleEmbedResponse(u, "Took away from %d members", numTaken))
 			})
 
 			return SimpleEmbedResponse(u, "Started the job..."), nil
@@ -587,9 +593,9 @@ var CoreAdminCommands = []*commands.YAGCommand{
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			target := parsed.Args[0].User()
 
-			u := parsed.Msg.Author
+			u := parsed.Author
 
-			n, err := models.EconomyUsers(models.EconomyUserWhere.GuildID.EQ(parsed.GS.ID), models.EconomyUserWhere.UserID.EQ(target.ID)).DeleteAll(parsed.Context(), common.PQ)
+			n, err := models.EconomyUsers(models.EconomyUserWhere.GuildID.EQ(parsed.GuildData.GS.ID), models.EconomyUserWhere.UserID.EQ(target.ID)).DeleteAll(parsed.Context(), common.PQ)
 			if err != nil {
 				return nil, err
 			}
@@ -603,10 +609,7 @@ var CoreAdminCommands = []*commands.YAGCommand{
 	},
 }
 
-func FindRole(gs *dstate.GuildState, searchStr string) *discordgo.Role {
-	gs.RLock()
-	defer gs.RUnlock()
-
+func FindRole(gs *dstate.GuildSet, searchStr string) *discordgo.Role {
 	parsedSearch, _ := strconv.ParseInt(searchStr, 10, 64)
 
 	if strings.HasPrefix(searchStr, "<@&") && strings.HasSuffix(searchStr, ">") {
@@ -619,17 +622,17 @@ func FindRole(gs *dstate.GuildState, searchStr string) *discordgo.Role {
 	// incase it was just @ and the role name
 	searchTrimedPrefix := strings.TrimPrefix(searchStr, "@")
 
-	for _, v := range gs.Guild.Roles {
+	for _, v := range gs.Roles {
 		if parsedSearch != 0 && v.ID == parsedSearch {
-			return v
+			return &v
 		}
 
 		if strings.EqualFold(searchStr, v.Name) {
-			return v
+			return &v
 		}
 
 		if strings.EqualFold(searchTrimedPrefix, v.Name) {
-			return v
+			return &v
 		}
 
 	}
