@@ -265,7 +265,7 @@ var ShopAdminCommands = []*commands.YAGCommand{
 		Description:  "Adds a item to a shop list, only economy admin can use this command",
 		RequiredArgs: 2,
 		Arguments: []*dcmd.ArgDef{
-			&dcmd.ArgDef{Name: "List ID", Type: dcmd.Int},
+			&dcmd.ArgDef{Name: "List-ID", Type: dcmd.Int},
 			&dcmd.ArgDef{Name: "Item", Type: dcmd.String},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
