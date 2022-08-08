@@ -313,7 +313,7 @@ var (
 		RequiredArgs: 2,
 		Arguments: []*dcmd.ArgDef{
 			&dcmd.ArgDef{Name: "Waifu", Type: dcmd.AdvUserNoMember},
-			&dcmd.ArgDef{Name: "New Owner", Type: dcmd.AdvUserNoMember},
+			&dcmd.ArgDef{Name: "New-Owner", Type: dcmd.AdvUserNoMember},
 		},
 		RunFunc: func(parsed *dcmd.Data) (interface{}, error) {
 			u := parsed.Author
