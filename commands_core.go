@@ -25,8 +25,8 @@ import (
 var CoreCommands = []*commands.YAGCommand{
 	&commands.YAGCommand{
 		CmdCategory: CategoryEconomy,
-		Name:        "$",
-		Aliases:     []string{"balance", "wallet"},
+		Name:        "balance",
+		Aliases:     []string{"$", "wallet"},
 		Description: "Shows you balance",
 		Arguments: []*dcmd.ArgDef{
 			&dcmd.ArgDef{Name: "Target", Type: dcmd.AdvUserNoMember},
