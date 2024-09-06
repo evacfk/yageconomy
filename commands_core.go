@@ -230,7 +230,7 @@ var CoreCommands = []*commands.YAGCommand{
 				page = 1
 			}
 
-			return NewPaginatedResponse(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, page, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
+			return paginatedmessages.NewPaginatedResponse(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, page, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 
 				offset := (newPage - 1) * 10
 				if offset < 0 {
