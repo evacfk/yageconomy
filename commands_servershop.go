@@ -35,7 +35,7 @@ var ShopCommands = []*commands.YAGCommand{
 			account := CtxUser(parsed.Context())
 			conf := CtxConfig(parsed.Context())
 
-			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, 1, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
+			_, err := paginatedmessages.CreatePaginatedMessage(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, 1, 0, func(p *paginatedmessages.PaginatedMessage, Page int) (*discordgo.MessageEmbed, error) {
 				offset := (newPage - 1) * 12
 
 				items, err := models.EconomyShopItems(
