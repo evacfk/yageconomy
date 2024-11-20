@@ -89,7 +89,7 @@ var ShopCommands = []*commands.YAGCommand{
 				return embed, nil
 			})
 
-			return nil, err
+			return response, nil
 		},
 	},
 	&commands.YAGCommand{
