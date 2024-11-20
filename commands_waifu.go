@@ -33,7 +33,7 @@ var (
 			conf := CtxConfig(parsed.Context())
 
 			//_, err := paginatedmessages.CreatePaginatedMessage(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, parsed.Args[0].Int(), 0,
-			return paginatedmessages.NewPaginatedResponse(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, parsed.Args[0].Int(), 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
+			return paginatedmessages.CreatePaginatedMessage(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, parsed.Args[0].Int(), 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 
 					offset := (newPage - 1) * 10
 					items, err := models.EconomyUsers(
