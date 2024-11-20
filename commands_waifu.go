@@ -66,7 +66,7 @@ var (
 					}
 
 					return embed, nil
-				})
+				}), nil
 
 			return nil, nil
 		},
@@ -773,9 +773,9 @@ func ListWaifuItems(guildID, channelID int64, u *discordgo.User, currentMoney in
 		}
 
 		return embed, nil
-	})
+	}), nil
 
-	return nil, err
+	return nil, nil
 
 }
 
