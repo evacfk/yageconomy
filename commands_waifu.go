@@ -742,9 +742,9 @@ func WaifuCost(from, target *models.EconomyUser) int64 {
 
 }
 
-func ListWaifuItems(guildID, channelID int64, u *discordgo.User, currentMoney int64, currencySymbol string) (*discordgo.MessageEmbed, error) {
+func ListWaifuItems(guildID, channelID int64, u *discordgo.User, currentMoney int64, currencySymbol string) (interface{}, error) {
 	//_, err := paginatedmessages.CreatePaginatedMessage(guildID, channelID, 1, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
-	return paginatedmessages.CreatePaginatedMessage(guildID, channelID, 1, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
+	return paginatedmessages.NewPaginatedResponse(guildID, channelID, 1, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 
 		offset := (newPage - 1) * 12
 
