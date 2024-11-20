@@ -38,7 +38,6 @@ var ShopCommands = []*commands.YAGCommand{
 			//_, err := paginatedmessages.CreatePaginatedMessage(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, 1, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
 			return paginatedmessages.NewPaginatedResponse(parsed.GuildData.GS.ID, parsed.GuildData.CS.ID, page, 0, func(p *paginatedmessages.PaginatedMessage, newPage int) (*discordgo.MessageEmbed, error) {
     				offset := (newPage - 1) * 12
-			})}, nil
 
 				items, err := models.EconomyShopItems(
 					models.EconomyShopItemWhere.GuildID.EQ(parsed.GuildData.GS.ID),
